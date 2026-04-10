@@ -4,6 +4,7 @@
 Mô tả ngắn gọn về dự án, mục đích và đối tượng sử dụng.
 
 ## Cấu trúc thư mục
+```text
 petsmart-erp/ (Thư mục gốc của dự án)
 ├── frontend/               # Toàn bộ code Next.js (Cấu hình như đã bàn)
 │   │
