@@ -49,7 +49,7 @@ petsmart-erp/ (Thư mục gốc của dự án)
 ├── docs/                   # Tài liệu dự án (SRS, Bản mô tả 10 tỷ VNĐ)
 ├── .gitignore              # Quan trọng: Chặn đẩy node_modules và .env lên GitHub
 └── README.md               # Hướng dẫn chạy cả 2 phần Front & Back
-
+```
 ## Công nghệ sử dụng
 * **Frontend:** Next.js (TypeScript)
 * **Database:** Oracle 21c
