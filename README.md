@@ -6,6 +6,7 @@ Mô tả ngắn gọn về dự án, mục đích và đối tượng sử dụn
 ## Cấu trúc thư mục
 ```text
 petsmart-erp/ (Thư mục gốc của dự án)
+│  
 ├── frontend/               # Toàn bộ code Next.js (Cấu hình như đã bàn)
 │   │
 │   ├──.next/               # Chứa mã nguồn đã biên dịch. [TUYỆT ĐỐI KHÔNG SỬA]
@@ -24,16 +25,26 @@ petsmart-erp/ (Thư mục gốc của dự án)
 │   │
 │   ├── types/              # Định nghĩa kiểu dữ liệu và cấu trúc thực thể. (Nơi viết code chính).
 │   │
-│   ├── .gitignore
-│   ├── AGENTS.md
-│   ├── eslint.config.mjs
-│   ├── next-env.d.ts
-│   ├── next.config.ts
-│   ├── package-lock.json
-│   ├── package.json
-│   ├── postcss.config.mjs
-│   ├── README.md
-│   └── tsconfig.json
+│   ├── .gitignore          # Danh sách tệp tin không đẩy lên kho lưu trữ Git.
+│   │
+│   ├── AGENTS.md    
+│   │
+│   ├── eslint.config.mjs   # Cấu hình bộ kiểm tra chuẩn code. (Ít khi phải sửa).
+│   │
+│   ├── next-env.d.ts       # Tệp khai báo kiểu dữ liệu hệ thống cho Next.js. [KHÔNG NÊN SỬA] - Next.js tự quản lý để đồng bộ với TypeScript.
+│   │
+│   ├── next.config.ts      # Tệp điều chỉnh thông số vận hành Framework. (Sửa khi cần cấu hình đặc biệt).
+│   │
+│   ├── package-lock.json   # Bản chốt chi tiết phiên bản của các thư viện. [TUYỆT ĐỐI KHÔNG SỬA] - File này tự cập nhật theo package.json.
+│   │
+│   ├── package.json        # Thông tin dự án và danh sách thư viện. (Chỉ sửa khi cần thêm script hoặc đổi thông tin dự án).
+│   │
+│   ├── postcss.config.mjs  # Cấu hình bộ tiền xử lý để tối ưu mã CSS. (Ít khi phải sửa).
+│   │
+│   ├── README.md           # Tài liệu hướng dẫn và mô tả tổng quan dự án. (Nên sửa để làm báo cáo).
+│   │
+│   └── tsconfig.json       # Cấu hình các quy tắc biên dịch TypeScript. (Ít khi phải sửa).
+│
 ├── backend/                # Toàn bộ code xử lý Server & Oracle
 │   ├── src/
 │   │   ├── controllers/
@@ -62,3 +73,6 @@ petsmart-erp/ (Thư mục gốc của dự án)
 
 ## Thành viên thực hiện
 * Nguyễn Đoàn Đức Hiếu - 24520500 (Nhóm trưởng)
+* Nguyễn Nữ Trà Giang -
+* Lê Thị Bích Duyên -
+* Hồ Thị Thùy Dung - 
