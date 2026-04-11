@@ -3,6 +3,22 @@
 ## Giới thiệu
 Mô tả ngắn gọn về dự án, mục đích và đối tượng sử dụng.
 
+## Công nghệ sử dụng
+* **Frontend:** Next.js (TypeScript)
+* **Database:** Oracle 21c
+* **UI Library:** Tailwind CSS
+
+## Hướng dẫn cài đặt
+1. Clone dự án: `git clone https://github.com/DalzielNguyen-1611/IS210-Database-Management-System.git`
+2. Cài đặt thư viện: `npm install`
+3. Chạy môi trường dev: `npm run dev`
+
+## Thành viên thực hiện
+* Nguyễn Đoàn Đức Hiếu - 24520500 (Nhóm trưởng)
+* Nguyễn Nữ Trà Giang -
+* Lê Thị Bích Duyên -
+* Hồ Thị Thùy Dung - 
+
 ## Cấu trúc thư mục
 ```text
 petsmart-erp/ (Thư mục gốc của dự án)
@@ -61,18 +77,3 @@ petsmart-erp/ (Thư mục gốc của dự án)
 ├── .gitignore              # Quan trọng: Chặn đẩy node_modules và .env lên GitHub
 └── README.md               # Hướng dẫn chạy cả 2 phần Front & Back
 ```
-## Công nghệ sử dụng
-* **Frontend:** Next.js (TypeScript)
-* **Database:** Oracle 21c
-* **UI Library:** Tailwind CSS
-
-## Hướng dẫn cài đặt
-1. Clone dự án: `git clone https://github.com/DalzielNguyen-1611/IS210-Database-Management-System.git`
-2. Cài đặt thư viện: `npm install`
-3. Chạy môi trường dev: `npm run dev`
-
-## Thành viên thực hiện
-* Nguyễn Đoàn Đức Hiếu - 24520500 (Nhóm trưởng)
-* Nguyễn Nữ Trà Giang -
-* Lê Thị Bích Duyên -
-* Hồ Thị Thùy Dung - 
