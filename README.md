@@ -4,6 +4,7 @@
 Mô tả ngắn gọn về dự án, mục đích và đối tượng sử dụng.
 
 ## Công nghệ sử dụng
+* **Backend:** Node.js
 * **Frontend:** Next.js (TypeScript)
 * **Database:** Oracle 21c
 * **UI Library:** Tailwind CSS
@@ -70,7 +71,8 @@ petsmart-erp/ (Thư mục gốc của dự án)
 │   ├── package.json
 │   └── .env                # Lưu kết nối Oracle (DATABASE_URL=...)
 ├── database/               # Nơi lưu trữ tài liệu về DB cho môn IS210
-│   ├── schema.sql          # Các lệnh CREATE TABLE, SEQUENCE
+│   ├── schema/             # Các lệnh CREATE TABLE, SEQUENCE
+│   │   ├──
 │   ├── procedures.sql      # Các Stored Procedures trong Oracle
 │   └── diagrams/           # File thiết kế ERD, BPMN
 ├── docs/                   # Tài liệu dự án (SRS, Bản mô tả 10 tỷ VNĐ)
