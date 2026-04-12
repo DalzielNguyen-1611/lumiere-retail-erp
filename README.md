@@ -1,4 +1,4 @@
-# TÊN DỰ ÁN CỦA BẠN (Ví dụ: PetSmart ERP)
+# Hệ thống quản lý kinh doanh mỹ thẩm
 
 ## Giới thiệu
 Mô tả ngắn gọn về dự án, mục đích và đối tượng sử dụng.
