@@ -12,3 +12,6 @@ CREATE TABLE QUAN_LY_CHI_NHANH (
     NGAYBATDAU DATE NOT NULL,
     PRIMARY KEY (MACUAHANG, MANHANVIEN)
 );
+
+
+PROMPT --- Đang khởi tạo Module Tổ chức và Nhân sự ---
