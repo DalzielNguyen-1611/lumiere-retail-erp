@@ -11,8 +11,8 @@ Mô tả ngắn gọn về dự án, mục đích và đối tượng sử dụn
 
 ## Hướng dẫn cài đặt
 1. Clone dự án: `git clone https://github.com/DalzielNguyen-1611/IS210-Database-Management-System.git`
-2. Cài đặt thư viện: `npm install`
-3. Chạy môi trường dev: `npm run dev`
+2. Cài đặt môi trường phù hợp cho những công nghệ sử dụng bên trên
+3. Tạo user Oracle và import database
 
 ## Thành viên thực hiện
 * Nguyễn Đoàn Đức Hiếu - 24520500 (Nhóm trưởng)
