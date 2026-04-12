@@ -27,3 +27,22 @@ CREATE TABLE SAN_PHAM_DANH_MUC (
     MADANHMUC NUMBER NOT NULL,
     PRIMARY KEY (MASANPHAM, MADANHMUC) -- Khóa chính hỗn hợp
 );
+
+
+
+INSERT INTO SAN_PHAM (
+    TENSANPHAM, DONVITINH, GIANIEMYET, THUE, MAVACH, 
+    COTHEMUA, COTHEBAN, POS, THUONGHIEU, XUATXU, 
+    PHUHOP, THANHPHAN, HUONGDAN, MOTA
+) 
+VALUES (
+    'Thức ăn mèo Whiskas', 'Gói', 50000, 0.1, '8931234567', 
+    1, 1, 1, 'Whiskas', 'Mỹ', 
+    'Mèo con', 'Cá hồi', 'Ăn trực tiếp', 'Thơm ngon bổ dưỡng'
+);
+
+COMMIT;
+-- 2. CỰC KỲ QUAN TRỌNG: Bạn phải chạy lệnh này thì Backend mới thấy được dữ liệu
+COMMIT;
+
+select * from san_pham;
