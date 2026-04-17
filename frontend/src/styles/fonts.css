@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Khai báo biến để team gọi cho nhanh */
+  --font-main: 'Inter', sans-serif;
+  --font-heading: 'Cormorant Garamond', serif;
+}
+
+body {
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased; /* Giúp font chữ trên trình duyệt trông mịn hơn */
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, .high-end-title {
+  font-family: var(--font-heading);
+}
