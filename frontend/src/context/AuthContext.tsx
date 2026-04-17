@@ -4,11 +4,13 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 export const roleConfig = {
   admin: {
     defaultPath: "/dashboard",
-    allowedPaths: ["/dashboard", "/inventory", "/hrm", "/finance"],
+  allowedPaths: ["/dashboard", "/inventory", "/hrm", "/finance"],
+  color: "#D4AF37",
   },
   staff: {
     defaultPath: "/pos",
-    allowedPaths: ["/pos", "/customers"],
+  allowedPaths: ["/pos", "/customers"],
+  color: "#60A5FA",
   },
 };
 

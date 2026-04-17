@@ -1,6 +1,5 @@
-import { useState } from "react";
-import React from "react";
-import { useNavigate } from "react-router";
+import { useState, type ElementType } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Eye,
   EyeOff,
@@ -11,11 +10,10 @@ import {
   ArrowRight,
   AlertCircle,
   Monitor,
-  Package,
   LayoutDashboard,
   Truck,
 } from "lucide-react";
-import { useAuth, roleConfig, UserRole, MOCK_USERS } from "../context/AuthContext";
+import { useAuth, roleConfig } from "../context/AuthContext";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 
 const BG_IMAGE = "https://images.unsplash.com/photo-1759262151080-e05ba1c6294f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920";
@@ -26,16 +24,15 @@ const demoAccounts: {
   labelVi: string;
   username: string;
   password: string;
-  role: UserRole;
-  icon: React.ElementType;
+  role: 'admin' | 'staff';
+  icon: ElementType;
   description: string;
 }[] = [
   { label: "Admin", labelVi: "Quản trị viên", username: "admin", password: "admin123", role: "admin", icon: ShieldCheck, description: "Full access to all modules" },
-  { label: "Store Manager", labelVi: "Quản lý CN", username: "sophia", password: "manager123", role: "manager", icon: LayoutDashboard, description: "Branch-level management" },
-  { label: "Sales Staff", labelVi: "Nhân viên quầy", username: "mia", password: "sales123", role: "sales", icon: Monitor, description: "POS & returns access" },
-  { label: "Warehouse Staff", labelVi: "Nhân viên kho", username: "hana", password: "warehouse123", role: "warehouse", icon: Truck, description: "Inventory & logistics" },
+  { label: "Store Manager", labelVi: "Quản lý CN", username: "sophia", password: "manager123", role: "staff", icon: LayoutDashboard, description: "Branch-level management" },
+  { label: "Sales Staff", labelVi: "Nhân viên quầy", username: "mia", password: "sales123", role: "staff", icon: Monitor, description: "POS & returns access" },
+  { label: "Warehouse Staff", labelVi: "Nhân viên kho", username: "hana", password: "warehouse123", role: "staff", icon: Truck, description: "Inventory & logistics" },
 ];
-
 export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -58,22 +55,39 @@ export function Login() {
     
     setLoading(true);
     setError("");
+    // Try backend login first
+    try {
+      const resp = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const json = await resp.json();
+      if (resp.ok && json?.data) {
+        const userData = json.data.user;
+        const token = json.data.token;
+        login({ maNhanVien: userData.maNhanVien, username: userData.username, role: userData.role } as any, token);
+        setLoading(false);
+        const defaultPath = roleConfig[userData.role]?.defaultPath || "/dashboard";
+        navigate(defaultPath, { replace: true });
+        return;
+      }
+    } catch (err) {
+      // ignore and fallback to demo
+      console.warn('Backend login failed, falling back to demo accounts', err);
+    }
 
-    // 1. Gửi request thật xuống Backend Node.js -> Oracle
-    const result = await login(username, password);
-    setLoading(false);
-
-    if (result.success) {
-      // 2. Lấy thông tin user vừa đăng nhập thành công từ AuthContext
-      // Giả sử logic login đã lưu user vào state
-      // Chúng ta sẽ điều hướng dựa trên roleConfig mà bạn đã định nghĩa
-      const defaultPath = roleConfig[activeDemo as UserRole]?.defaultPath || "/dashboard";
-      
-      // Chuyển hướng người dùng
+    // Fallback to local demo login
+    const matched = demoAccounts.find((a) => a.username === username && a.password === password);
+    if (matched) {
+      const userData = { maNhanVien: Math.floor(Math.random() * 90000) + 10000, username: matched.username, role: matched.role };
+      login(userData as any, "demo-token");
+      setLoading(false);
+      const defaultPath = roleConfig[matched.role]?.defaultPath || "/dashboard";
       navigate(defaultPath, { replace: true });
     } else {
-      // 3. Hiển thị lỗi từ Backend (Sai mật khẩu, Server chết, Oracle lỗi...)
-      setError(result.error || "Đăng nhập thất bại. Kiểm tra kết nối hệ thống.");
+      setLoading(false);
+      setError("Tên đăng nhập hoặc mật khẩu không đúng.");
     }
   };
 
@@ -328,7 +342,7 @@ export function Login() {
                 <button
                   type="button"
                   onClick={() => setRememberMe(!rememberMe)}
-                  className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-all"
+                  className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all"
                   style={{
                     background: rememberMe ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "rgba(255,255,255,0.08)",
                     border: `1px solid ${rememberMe ? "#D4AF37" : "rgba(255,255,255,0.2)"}`,
@@ -393,7 +407,7 @@ export function Login() {
                     }}
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                       style={{ background: `${config.color}22` }}
                     >
                       <Icon size={14} color={config.color} />

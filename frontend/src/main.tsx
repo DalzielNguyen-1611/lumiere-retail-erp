@@ -1,11 +1,14 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-// Sửa dòng import CSS cũ thành đường dẫn trỏ vào thư mục bạn vừa tạo
-import './styles/index.css' 
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './routes/index'; 
+import { AuthProvider } from './context/AuthContext';
+import './styles/index.css'; // Trỏ đúng vào file CSS giao diện của bạn
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  </React.StrictMode>
+);

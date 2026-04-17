@@ -1,12 +1,11 @@
-import { useEffect, type ReactNode } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router";
+import { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar"; // Đảm bảo bạn cũng sẽ tạo file Sidebar.tsx nhé
 import { useAuth } from "../../context/AuthContext";
 
 export function AuthLayout() {
-  const { isAuthenticated, user, canAccess, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -35,7 +34,7 @@ export function AuthLayout() {
       />
 
       {/* Sidebar */}
-      <div className="relative z-10 flex-shrink-0" style={{ boxShadow: "4px 0 30px rgba(61,26,46,0.15)" }}>
+  <div className="relative z-10 shrink-0" style={{ boxShadow: "4px 0 30px rgba(61,26,46,0.15)" }}>
         <Sidebar />
       </div>
 

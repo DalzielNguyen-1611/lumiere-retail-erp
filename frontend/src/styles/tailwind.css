@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+/* Nếu team bạn có cài thư viện tailwindcss-animate cho hiệu ứng UI */
+@plugin "tailwindcss-animate";
