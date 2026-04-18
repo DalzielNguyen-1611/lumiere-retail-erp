@@ -1,4 +1,4 @@
-import { useState, type ElementType } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Eye,
@@ -6,12 +6,8 @@ import {
   Sparkles,
   Lock,
   User,
-  ShieldCheck,
   ArrowRight,
   AlertCircle,
-  Monitor,
-  LayoutDashboard,
-  Truck,
 } from "lucide-react";
 import { useAuth, roleConfig } from "../context/AuthContext";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
@@ -19,20 +15,6 @@ import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 const BG_IMAGE = "https://images.unsplash.com/photo-1759262151080-e05ba1c6294f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920";
 const BG_IMAGE_2 = "https://images.unsplash.com/photo-1591964023443-60bc8afbdf8c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800";
 
-const demoAccounts: {
-  label: string;
-  labelVi: string;
-  username: string;
-  password: string;
-  role: 'admin' | 'staff';
-  icon: ElementType;
-  description: string;
-}[] = [
-  { label: "Admin", labelVi: "Quản trị viên", username: "admin", password: "admin123", role: "admin", icon: ShieldCheck, description: "Full access to all modules" },
-  { label: "Store Manager", labelVi: "Quản lý CN", username: "sophia", password: "manager123", role: "staff", icon: LayoutDashboard, description: "Branch-level management" },
-  { label: "Sales Staff", labelVi: "Nhân viên quầy", username: "mia", password: "sales123", role: "staff", icon: Monitor, description: "POS & returns access" },
-  { label: "Warehouse Staff", labelVi: "Nhân viên kho", username: "hana", password: "warehouse123", role: "staff", icon: Truck, description: "Inventory & logistics" },
-];
 export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -44,7 +26,6 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showForgot, setShowForgot] = useState(false);
-  const [activeDemo, setActiveDemo] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +36,7 @@ export function Login() {
     
     setLoading(true);
     setError("");
-    // Try backend login first
+    // Try backend login
     try {
       const resp = await fetch('/api/auth/login', {
         method: 'POST',
@@ -72,31 +53,19 @@ export function Login() {
         navigate(defaultPath, { replace: true });
         return;
       }
+      // backend responded but not ok
+      setLoading(false);
+      setError(json?.message || json?.status || 'Đăng nhập thất bại.');
+      return;
     } catch (err) {
-      // ignore and fallback to demo
-      console.warn('Backend login failed, falling back to demo accounts', err);
-    }
-
-    // Fallback to local demo login
-    const matched = demoAccounts.find((a) => a.username === username && a.password === password);
-    if (matched) {
-      const userData = { maNhanVien: Math.floor(Math.random() * 90000) + 10000, username: matched.username, role: matched.role };
-      login(userData as any, "demo-token");
+      console.warn('Backend login failed', err);
       setLoading(false);
-      const defaultPath = roleConfig[matched.role]?.defaultPath || "/dashboard";
-      navigate(defaultPath, { replace: true });
-    } else {
-      setLoading(false);
-      setError("Tên đăng nhập hoặc mật khẩu không đúng.");
+      setError('Không thể kết nối đến server. Vui lòng thử lại.');
+      return;
     }
   };
 
-  const fillDemo = (acc: typeof demoAccounts[number]) => {
-    setActiveDemo(acc.username);
-    setUsername(acc.username);
-    setPassword(acc.password);
-    setError("");
-  };
+  // ... no demo fill
 
   return (
     <div className="min-h-screen flex overflow-hidden relative">
@@ -381,45 +350,7 @@ export function Login() {
               </button>
             </form>
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 my-6">
-              <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
-              <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "11px" }}>DEMO ACCOUNTS</span>
-              <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
-            </div>
-
-            {/* Demo Accounts */}
-            <div className="grid grid-cols-2 gap-2">
-              {demoAccounts.map((acc) => {
-                const config = roleConfig[acc.role];
-                const isActive = activeDemo === acc.username;
-                const Icon = acc.icon;
-                return (
-                  <button
-                    key={acc.username}
-                    type="button"
-                    onClick={() => fillDemo(acc)}
-                    className="flex items-center gap-2 p-2.5 rounded-xl text-left transition-all"
-                    style={{
-                      background: isActive ? `${config.color}25` : "rgba(255,255,255,0.06)",
-                      border: `1px solid ${isActive ? config.color + "60" : "rgba(255,255,255,0.1)"}`,
-                      boxShadow: isActive ? `0 4px 12px ${config.color}25` : "none",
-                    }}
-                  >
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ background: `${config.color}22` }}
-                    >
-                      <Icon size={14} color={config.color} />
-                    </div>
-                    <div className="min-w-0">
-                      <p style={{ color: "rgba(255,255,255,0.9)", fontSize: "11.5px", fontWeight: 600 }}>{acc.label}</p>
-                      <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "10px" }}>{acc.username}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            {/* (Demo accounts removed - production login uses backend) */}
           </div>
 
           {/* Footer */}
