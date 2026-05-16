@@ -275,7 +275,7 @@ export function HR() {
   };
 
   return (
-    <div className="p-8 min-h-screen relative">
+    <div className="p-8 min-h-screen relative overflow-hidden">
       <div className="flex items-center justify-between mb-8">
         <div>
           <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500 }}>Quản lý đội ngũ</p>

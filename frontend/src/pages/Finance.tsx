@@ -168,7 +168,7 @@ export function Finance() {
   const totalPaid = payables.filter(p => p.status === 'Đã thanh toán').reduce((s, p) => s + p.amount, 0);
 
   return (
-    <div className="p-8 min-h-screen bg-[#fdfbf7] relative">
+    <div className="p-8 min-h-screen relative overflow-hidden">
       <div className="flex justify-between items-end mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">

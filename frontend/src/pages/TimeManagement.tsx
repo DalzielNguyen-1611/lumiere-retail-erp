@@ -132,7 +132,7 @@ export function TimeManagement() {
   };
 
   return (
-    <div className="p-8 min-h-screen bg-[#fdfbf7]">
+    <div className="p-8 min-h-screen">
       {/* HEADER */}
       <div className="flex justify-between items-end mb-8">
         <div>

@@ -720,52 +720,93 @@ CREATE OR REPLACE PROCEDURE SP_LAP_PHIEU_LUONG (
 ) AS
     v_mucluong NUMBER;
     v_giamtru NUMBER;
-    v_bhxh NUMBER;
-    v_bhyt NUMBER;
-    v_bhtn NUMBER;
+    v_ins_base NUMBER;
+    -- NV đóng (10.5%)
+    v_bhxh_nv NUMBER;
+    v_bhyt_nv NUMBER;
+    v_bhtn_nv NUMBER;
+    -- DN đóng (21.5%)
+    v_bhxh_dn NUMBER;
+    v_bhyt_dn NUMBER;
+    v_bhtn_dn NUMBER;
+    
     v_thue_tncn NUMBER := 0;
     v_thuclinh NUMBER;
+    v_maphieu NUMBER;
     v_count NUMBER;
+    v_is_manager NUMBER := 0;
+    v_total_expense NUMBER;
 BEGIN
     -- 1. Lấy thông tin hồ sơ lương
     SELECT MUCLUONG, GIAMTRUBANTHAN INTO v_mucluong, v_giamtru 
     FROM HO_SO_LUONG WHERE MANHANVIEN = p_manhanvien;
 
-    -- 2. Tính bảo hiểm (Trích từ lương nhân viên)
-    -- Giả sử đóng BH trên mức lương thực nhận (hoặc mức lương CB tùy chính sách)
-    -- Ở đây ta dùng mức lương thực nhận để tính cho sát thực tế
-    v_bhxh := ROUND(p_luong_thuc_nhan * 0.08);
-    v_bhyt := ROUND(p_luong_thuc_nhan * 0.015);
-    v_bhtn := ROUND(p_luong_thuc_nhan * 0.01);
+    -- 2. Kiểm tra vai trò quản lý
+    SELECT COUNT(*) INTO v_is_manager
+    FROM PHAN_QUYEN_NHAN_VIEN pq
+    JOIN VAI_TRO vt ON pq.MAVAITRO = vt.MAVAITRO
+    WHERE pq.MANHANVIEN = p_manhanvien
+    AND (LOWER(vt.TENVAITRO) LIKE '%manager%' OR LOWER(vt.TENVAITRO) LIKE '%admin%');
 
-    -- 3. Tính thuế TNCN (Tạm tính đơn giản: 5% phần vượt quá giảm trừ sau khi trừ BH)
-    IF (p_luong_thuc_nhan - v_bhxh - v_bhyt - v_bhtn) > v_giamtru THEN
-        v_thue_tncn := ROUND((p_luong_thuc_nhan - v_bhxh - v_bhyt - v_bhtn - v_giamtru) * 0.05);
+    -- 3. Xác định mức lương đóng bảo hiểm (Trần 36tr)
+    v_ins_base := LEAST(v_mucluong, 36000000);
+
+    -- 4. Tính bảo hiểm NLĐ (10.5%)
+    v_bhxh_nv := ROUND(v_ins_base * 0.08);
+    v_bhyt_nv := ROUND(v_ins_base * 0.015);
+    v_bhtn_nv := ROUND(v_ins_base * 0.01);
+
+    -- 5. Tính bảo hiểm DN (21.5%)
+    v_bhxh_dn := ROUND(v_ins_base * 0.175); -- Bao gồm 14% hưu trí, 3% thai sản, 0.5% TNLĐ
+    v_bhyt_dn := ROUND(v_ins_base * 0.03);
+    v_bhtn_dn := ROUND(v_ins_base * 0.01);
+
+    -- 6. Tính thuế TNCN (Tạm tính đơn giản: 5% phần vượt quá giảm trừ sau khi trừ BH NV)
+    IF (p_luong_thuc_nhan - (v_bhxh_nv + v_bhyt_nv + v_bhtn_nv)) > v_giamtru THEN
+        v_thue_tncn := ROUND((p_luong_thuc_nhan - (v_bhxh_nv + v_bhyt_nv + v_bhtn_nv) - v_giamtru) * 0.05);
     END IF;
 
-    -- 4. Tính lương thực lĩnh (Phần nợ 334)
-    v_thuclinh := p_luong_thuc_nhan - v_bhxh - v_bhyt - v_bhtn - v_thue_tncn;
-
-    -- 5. Kiểm tra xem đã tồn tại phiếu lương chưa
-    SELECT COUNT(*) INTO v_count FROM PHIEU_LUONG WHERE MANHANVIEN = p_manhanvien AND THANGNAM = p_thangnam;
+    -- 7. Tính lương thực lĩnh (Phần nợ 334)
+    v_thuclinh := p_luong_thuc_nhan - (v_bhxh_nv + v_bhyt_nv + v_bhtn_nv) - v_thue_tncn;
     
+    -- 8. Tính tổng chi phí DN phải chịu
+    v_total_expense := p_luong_thuc_nhan + (v_bhxh_dn + v_bhyt_dn + v_bhtn_dn);
+
+    -- 9. Kiểm tra trùng lặp
+    SELECT COUNT(*) INTO v_count FROM PHIEU_LUONG WHERE MANHANVIEN = p_manhanvien AND THANGNAM = p_thangnam;
     IF v_count > 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Nhân viên đã được lập phiếu lương cho tháng này.');
     END IF;
 
-    -- 6. Ghi vào bảng PHIEU_LUONG
+    -- 10. Ghi vào bảng PHIEU_LUONG
     INSERT INTO PHIEU_LUONG (MANHANVIEN, THANGNAM, LUONG, TONGBAOHIEMNV, TONGTHUETNCN, THUCLINH, TRANGTHAI)
-    VALUES (p_manhanvien, p_thangnam, p_luong_thuc_nhan, (v_bhxh + v_bhyt + v_bhtn), v_thue_tncn, v_thuclinh, 'Chưa thanh toán');
+    VALUES (p_manhanvien, p_thangnam, p_luong_thuc_nhan, (v_bhxh_nv + v_bhyt_nv + v_bhtn_nv), v_thue_tncn, v_thuclinh, 'Chưa thanh toán')
+    RETURNING MAPHIEU INTO v_maphieu;
 
-    -- 7. Hạch toán kế toán (Cập nhật tăng nợ các tài khoản)
-    -- Ghi tăng nợ 334 (Phải trả NLĐ)
-    UPDATE TAI_KHOAN SET SODUHIENTAI = SODUHIENTAI + v_thuclinh WHERE MATAIKHOAN = 334;
+    -- 11. Hạch toán kế toán (Lưu lịch sử qua GIAO_DICH_TIEN)
+    -- Ghi nhận Chi phí (Nếu là quản lý ghi vào 642)
+    IF v_is_manager > 0 THEN
+        INSERT INTO GIAO_DICH_TIEN (MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, MAPHIEULUONG, GHICHU)
+        VALUES (642, 'THU', v_total_expense, SYSTIMESTAMP, v_maphieu, 'Chi phí lương quản lý tháng ' || p_thangnam);
+    END IF;
+
+    -- Ghi tăng nợ 334 (Lương thực trả)
+    INSERT INTO GIAO_DICH_TIEN (MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, MAPHIEULUONG, GHICHU)
+    VALUES (334, 'THU', v_thuclinh, SYSTIMESTAMP, v_maphieu, 'Ghi nhận nợ lương tháng ' || p_thangnam);
+    
     -- Ghi tăng nợ 3335 (Thuế TNCN)
-    UPDATE TAI_KHOAN SET SODUHIENTAI = SODUHIENTAI + v_thue_tncn WHERE MATAIKHOAN = 3335;
-    -- Ghi tăng nợ bảo hiểm
-    UPDATE TAI_KHOAN SET SODUHIENTAI = SODUHIENTAI + v_bhxh WHERE MATAIKHOAN = 3383;
-    UPDATE TAI_KHOAN SET SODUHIENTAI = SODUHIENTAI + v_bhyt WHERE MATAIKHOAN = 3384;
-    UPDATE TAI_KHOAN SET SODUHIENTAI = SODUHIENTAI + v_bhtn WHERE MATAIKHOAN = 3386;
+    INSERT INTO GIAO_DICH_TIEN (MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, MAPHIEULUONG, GHICHU)
+    VALUES (3335, 'THU', v_thue_tncn, SYSTIMESTAMP, v_maphieu, 'Trích thuế TNCN tháng ' || p_thangnam);
+    
+    -- Ghi tăng nợ bảo hiểm (Cộng gộp phần NV và DN - Tổng 32%)
+    INSERT INTO GIAO_DICH_TIEN (MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, MAPHIEULUONG, GHICHU)
+    VALUES (3383, 'THU', v_bhxh_nv + v_bhxh_dn, SYSTIMESTAMP, v_maphieu, 'Trích đóng BHXH (25.5%) tháng ' || p_thangnam);
+    
+    INSERT INTO GIAO_DICH_TIEN (MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, MAPHIEULUONG, GHICHU)
+    VALUES (3384, 'THU', v_bhyt_nv + v_bhyt_dn, SYSTIMESTAMP, v_maphieu, 'Trích đóng BHYT (4.5%) tháng ' || p_thangnam);
+    
+    INSERT INTO GIAO_DICH_TIEN (MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, MAPHIEULUONG, GHICHU)
+    VALUES (3386, 'THU', v_bhtn_nv + v_bhtn_dn, SYSTIMESTAMP, v_maphieu, 'Trích đóng BHTN (2%) tháng ' || p_thangnam);
 
     COMMIT;
 END;
@@ -777,7 +818,7 @@ END;
 --------------------------------------------------------------------------------
 CREATE OR REPLACE PROCEDURE SP_THANH_TOAN_LUONG (
     p_maphieu IN NUMBER,
-    p_mataikhoan IN NUMBER,
+    p_mataikhoan IN NUMBER, -- 111 hoặc 112
     p_ghichu IN VARCHAR2
 ) AS
     v_sotien NUMBER;
@@ -788,13 +829,14 @@ BEGIN
     -- 2. Cập nhật trạng thái phiếu lương
     UPDATE PHIEU_LUONG SET TRANGTHAI = 'Đã thanh toán' WHERE MAPHIEU = p_maphieu;
 
-    -- 3. Hạch toán giảm nợ 334
-    UPDATE TAI_KHOAN SET SODUHIENTAI = SODUHIENTAI - v_sotien WHERE MATAIKHOAN = 334;
+    -- 3. Hạch toán tất toán nợ 334 (Lưu lịch sử)
+    -- Giảm nợ 334
+    INSERT INTO GIAO_DICH_TIEN (MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, MAPHIEULUONG, GHICHU)
+    VALUES (334, 'CHI', v_sotien, SYSTIMESTAMP, p_maphieu, 'Tất toán nợ lương: ' || p_ghichu);
 
-    -- 4. Tạo giao dịch tiền (Phiếu chi)
-    -- Trigger sẽ tự động cập nhật giảm số dư tài khoản 111/112
-    INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, MAPHIEULUONG, GHICHU)
-    VALUES (1, p_mataikhoan, 'CHI', v_sotien, SYSTIMESTAMP, p_maphieu, p_ghichu);
+    -- 4. Tạo giao dịch tiền tại quỹ/ngân hàng (Phiếu chi thực tế)
+    INSERT INTO GIAO_DICH_TIEN (MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, MAPHIEULUONG, GHICHU)
+    VALUES (p_mataikhoan, 'CHI', v_sotien, SYSTIMESTAMP, p_maphieu, 'Chi tiền trả lương: ' || p_ghichu);
 
     COMMIT;
 END;

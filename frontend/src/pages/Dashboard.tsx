@@ -82,7 +82,7 @@ export function Dashboard() {
   };
 
   return (
-    <div className="p-8 min-h-screen bg-[#fdfbf7]">
+    <div className="p-8 min-h-screen">
       {/* HEADER */}
       <div className="flex justify-between items-end mb-8">
         <div>
@@ -95,7 +95,7 @@ export function Dashboard() {
           <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>
             {greeting}, {userName}!
           </h1>
-          <p className="text-[#6b4153] text-[14px] mt-1">Dưới đây là tình hình kinh doanh của toàn hệ thống (Thời gian thực).</p>
+          <p className="text-[#6b4153] text-[14px] mt-1">Dưới đây là tình hình kinh doanh của toàn hệ thống theo thời gian thực</p>
         </div>
       </div>
 
