@@ -206,4 +206,140 @@ router.put('/leaves/:id/status', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================================================
+// 6. LẤY DANH SÁCH TÍNH LƯƠNG DỰ TÍNH (Dựa trên Chấm công & Mức lương)
+// ============================================================================
+router.get('/payroll', async (req: Request, res: Response) => {
+  let connection;
+  try {
+    const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0') + '/' + new Date().getFullYear();
+    connection = await oracledb.getConnection(dbConfig);
+    const query = `
+      SELECT 
+        N.MANHANVIEN as "id", 
+        N.HOTEN as "name", 
+        NVL(H.MUCLUONG, 5000000) as "baseSalary",
+        (SELECT COUNT(*) FROM CHAM_CONG C WHERE C.MANHANVIEN = N.MANHANVIEN AND C.NGAY >= TRUNC(SYSDATE, 'MM') AND C.TRANGTHAI IN ('Đi làm', 'Hoàn thành ca', 'Đi trễ')) as "workDays",
+        (SELECT SUM(NVL(TANGCA, 0)) FROM CHAM_CONG C WHERE C.MANHANVIEN = N.MANHANVIEN AND C.NGAY >= TRUNC(SYSDATE, 'MM')) as "otHours",
+        P.TRANGTHAI as "status",
+        P.MAPHIEU as "slipId",
+        P.THUCLINH as "paidAmount"
+      FROM NHANVIEN N
+      LEFT JOIN HO_SO_LUONG H ON N.MANHANVIEN = H.MANHANVIEN
+      LEFT JOIN PHIEU_LUONG P ON N.MANHANVIEN = P.MANHANVIEN AND P.THANGNAM = :month
+      WHERE N.TRANGTHAI != 'Đã nghỉ việc'
+      ORDER BY N.MANHANVIEN DESC
+    `;
+    const result = await connection.execute(query, { month: currentMonth }, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    
+    // Tính toán lương thực tế
+    const payrollData = (result.rows || []).map((row: any) => {
+      // Công thức mới: Lấy 26 ngày làm chuẩn 100% lương
+      const standardDays = 26;
+      const daily = row.baseSalary / standardDays;
+      const hourly = daily / 8;
+      const mainSalary = daily * row.workDays;
+      const otSalary = row.otHours * hourly * 1.5;
+      const calculatedTotal = Math.round(mainSalary + otSalary);
+
+      return {
+        ...row,
+        totalSalary: row.status ? row.paidAmount : calculatedTotal,
+        displayStatus: row.status || 'Chưa tính'
+      };
+    });
+
+    res.json({ status: 'success', data: payrollData });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  } finally {
+    if (connection) await connection.close();
+  }
+});
+
+// ============================================================================
+// 7. LẬP PHIẾU LƯƠNG (GỌI PROCEDURE DATABASE)
+// ============================================================================
+router.post('/payroll/calculate', async (req: Request, res: Response) => {
+  let connection;
+  try {
+    const { empId, amount } = req.body;
+    const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0') + '/' + new Date().getFullYear();
+    connection = await oracledb.getConnection(dbConfig);
+    
+    // Gọi Procedure để xử lý hạch toán kế toán và tạo phiếu lương
+    // SP này sẽ tăng nợ 334, 3335, 3383, 3384, 3386
+    await connection.execute(
+      `BEGIN SP_LAP_PHIEU_LUONG(:id, :month, :amount); END;`,
+      { id: empId, month: currentMonth, amount },
+      { autoCommit: true }
+    );
+    
+    res.json({ status: 'success', message: 'Đã lập phiếu lương và hạch toán kế toán thành công!' });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  } finally {
+    if (connection) await connection.close();
+  }
+});
+
+// ============================================================================
+// 8. CHI TRẢ LƯƠNG (Hạch toán giảm nợ 334 & Tiền mặt/Ngân hàng)
+// ============================================================================
+router.post('/payroll/pay/:id', async (req: Request, res: Response) => {
+  let connection;
+  try {
+    const { id } = req.params; 
+    const { accountId, note } = req.body;
+    const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0') + '/' + new Date().getFullYear();
+    
+    connection = await oracledb.getConnection(dbConfig);
+    connection.autoCommit = false;
+
+    // 1. Tìm phiếu lương chưa thanh toán
+    const plRes = await connection.execute(
+      "SELECT MAPHIEU, THUCLINH FROM PHIEU_LUONG WHERE MANHANVIEN = :id AND THANGNAM = :m AND TRANGTHAI = 'Chưa thanh toán'",
+      { id, m: currentMonth }, { outFormat: oracledb.OUT_FORMAT_OBJECT }
+    );
+    
+    if (!plRes.rows || plRes.rows.length === 0) {
+      return res.status(400).json({ status: 'error', message: 'Không tìm thấy phiếu lương chờ thanh toán!' });
+    }
+    
+    const slip = (plRes.rows as any[])[0];
+
+    // 2. Cập nhật trạng thái phiếu lương
+    await connection.execute(
+      "UPDATE PHIEU_LUONG SET TRANGTHAI = 'Đã thanh toán' WHERE MAPHIEU = :sid",
+      { sid: slip.MAPHIEU }
+    );
+
+    // 3. Giảm nợ tài khoản 334 (Phải trả NLĐ)
+    await connection.execute(
+      "UPDATE TAI_KHOAN SET SODUHIENTAI = SODUHIENTAI - :amount WHERE MATAIKHOAN = 334",
+      { amount: slip.THUCLINH }
+    );
+
+    // 4. Tạo Giao dịch tiền (Phiếu chi) - Trigger sẽ tự động giảm tiền TK 111/112
+    const gdtQuery = `
+      INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, MAPHIEULUONG, GHICHU)
+      VALUES (1, :accId, 'CHI', :amount, SYSTIMESTAMP, :plId, :note)
+    `;
+    await connection.execute(gdtQuery, { 
+      accId: accountId, 
+      amount: slip.THUCLINH, 
+      plId: slip.MAPHIEU, 
+      note: note || `Chi trả lương tháng ${currentMonth} cho NV ID: ${id}` 
+    });
+    
+    await connection.commit();
+    res.json({ status: 'success', message: 'Đã thực hiện chi lương và tất toán nợ 334 thành công!' });
+  } catch (err: any) {
+    if (connection) await connection.rollback();
+    res.status(500).json({ status: 'error', message: err.message });
+  } finally {
+    if (connection) await connection.close();
+  }
+});
+
 export default router;

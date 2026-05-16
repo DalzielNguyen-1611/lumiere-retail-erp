@@ -153,11 +153,14 @@ router.post('/orders', async (req: Request, res: Response): Promise<any> => {
   let connection;
   try {
     // NHẬN THÊM employeeId TỪ FRONTEND
-    const { supplierId, note, items, totalValue, employeeId } = req.body;
+    const { supplierId, note, items, employeeId } = req.body;
     
     if (!supplierId || !items || items.length === 0) {
       return res.status(400).json({ status: 'error', message: 'Dữ liệu không hợp lệ' });
     }
+
+    // Tự tính toán lại tổng tiền dựa trên chi tiết mặt hàng để tránh sai lệch dữ liệu
+    const totalValue = items.reduce((acc: number, item: any) => acc + (item.quantity * (item.price || 0)), 0);
 
     connection = await oracledb.getConnection(dbConfig);
     connection.autoCommit = false;
@@ -168,14 +171,14 @@ router.post('/orders', async (req: Request, res: Response): Promise<any> => {
     // Gán cứng kho đến là 1 theo yêu cầu của bạn
     const khoId = 1; 
 
-    // 1. Tạo HOA_DON_MUA_HANG (sử dụng empId)
+    // 1. Tạo HOA_DON_MUA_HANG (sử dụng empId, khởi tạo TONGTIEN = 0 để Trigger tự tính)
     const insertHD = `
       INSERT INTO HOA_DON_MUA_HANG (MADOITAC, MANHANVIEN, SOHOADON_VAT, NGAYLAP, TONGTIEN, PHUONGTHUCTHANHTOAN, TRANGTHAI_THANHTOAN, GHICHU)
-      VALUES (:supId, :empId, 'VAT-' || TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), SYSDATE, :total, 'Chuyển khoản', 'Chưa thanh toán', :note)
+      VALUES (:supId, :empId, 'VAT-' || TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), SYSDATE, 0, 'Chuyển khoản', 'Chưa thanh toán', :note)
       RETURNING MAHOADONMUA INTO :hd_id
     `;
     const resultHD = await connection.execute(insertHD, {
-      supId: supplierId, empId: empId, total: totalValue, note: note || 'Nhập hàng',
+      supId: supplierId, empId: empId, note: note || 'Nhập hàng',
       hd_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
     });
     const newHoaDonId = (resultHD.outBinds as any).hd_id[0];

@@ -41,8 +41,11 @@ export function Finance() {
   const [payables, setPayables] = useState<any[]>([]);
   const [isLoadingPayables, setIsLoadingPayables] = useState(true);
 
+  const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
   // Modal Thanh Toán
-  const [paymentModal, setPaymentModal] = useState<{isOpen: boolean, id: number, supplier: string, amount: number, accountId: number} | null>(null);
+  const [paymentModal, setPaymentModal] = useState<{isOpen: boolean, id: number, supplier: string, amount: number, accountId: number, type?: string} | null>(null);
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const showToast = (message: string, type: "success" | "error" | "info") => {
@@ -95,9 +98,28 @@ export function Finance() {
     finally { setIsLoadingPayables(false); }
   };
 
+  const fetchPaymentHistoryData = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/finance/payment-history`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (json.status === "success") {
+        setPaymentHistory(json.data);
+      }
+    } catch (error: any) {
+      console.error("Lỗi tải lịch sử chi:", error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "overview") fetchOverviewData();
-    if (activeTab === "payables") fetchPayablesData();
+    if (activeTab === "payables") {
+      fetchPayablesData();
+      fetchPaymentHistoryData();
+    }
   }, [activeTab]);
 
   // Kích hoạt Modal Thanh Toán
@@ -112,7 +134,10 @@ export function Finance() {
       const res = await fetch(`${BACKEND_URL}/api/finance/pay/${paymentModal.id}`, { 
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountId: paymentModal.accountId })
+        body: JSON.stringify({ 
+          accountId: paymentModal.accountId,
+          type: paymentModal.type // Cần type để BE biết gọi SP nào
+        })
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -160,9 +185,6 @@ export function Finance() {
       </div>
 
       <div className="animate-in fade-in duration-500">
-        {/* ========================================================= */}
-        {/* TỔNG QUAN SỔ CÁI */}
-        {/* ========================================================= */}
         {activeTab === "overview" && (
           isLoadingOverview ? (
             <div className="flex flex-col items-center justify-center h-96">
@@ -261,7 +283,7 @@ export function Finance() {
             <div className="grid grid-cols-2 gap-5 mb-8">
               <div style={glassCard} className="p-5 flex items-center justify-between border-l-4 border-l-amber-400">
                 <div>
-                  <p className="text-[#9d6b7a] text-[12px] font-bold uppercase">Tổng nợ chưa trả (Phải trả NCC)</p>
+                  <p className="text-[#9d6b7a] text-[12px] font-bold uppercase">Tổng nợ chưa trả (NCC & Lương)</p>
                   <p className="text-amber-600 text-[24px] font-black mt-1">{totalUnpaid.toLocaleString()} ₫</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center"><AlertCircle color="#d97706"/></div>
@@ -276,14 +298,14 @@ export function Finance() {
             </div>
 
             <div style={glassCard} className="p-6">
-              <h2 className="text-[#3d1a2e] text-[16px] font-bold mb-6">Chứng Từ Mua Hàng & Thanh Toán</h2>
+              <h2 className="text-[#3d1a2e] text-[16px] font-bold mb-6">Chứng Từ Phải Trả & Thanh Toán</h2>
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-[#D4AF37]/20 text-[#9d6b7a] text-[11px] uppercase tracking-wider bg-[#D4AF37]/5">
-                    <th className="py-3 px-3 rounded-tl-xl">Mã Hóa Đơn</th>
-                    <th className="px-3">Đối Tác (Nhà Cung Cấp)</th>
+                    <th className="py-3 px-3 rounded-tl-xl">Loại / Mã</th>
+                    <th className="px-3">Đối Tượng</th>
                     <th className="px-3">Ngày Lập</th>
-                    <th className="px-3 text-right">Tổng Tiền Cần Chi</th>
+                    <th className="px-3 text-right">Số Tiền</th>
                     <th className="px-3 text-center">Trạng Thái</th>
                     <th className="px-3 text-center rounded-tr-xl">Nghiệp Vụ</th>
                   </tr>
@@ -295,22 +317,29 @@ export function Finance() {
                     <tr><td colSpan={6} className="py-10 text-center text-[#9d6b7a]">Không có hóa đơn nào cần xử lý.</td></tr>
                   ) : (
                     payables.map((row) => (
-                      <tr key={row.id} className="border-b border-[rgba(212,175,55,0.07)] hover:bg-white transition-colors">
-                        <td className="py-3 px-3"><p className="font-bold text-[#D4AF37] text-[13px]">{row.code}</p></td>
+                      <tr key={`${row.type}-${row.id}`} className="border-b border-[rgba(212,175,55,0.07)] hover:bg-white transition-colors">
+                        <td className="py-3 px-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`p-1.5 rounded-lg ${row.type === 'LUONG' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'}`}>
+                              {row.type === 'LUONG' ? <Users2 size={14} /> : <ShoppingCart size={14} />}
+                            </div>
+                            <p className="font-bold text-[#D4AF37] text-[13px]">{row.code}</p>
+                          </div>
+                        </td>
                         <td className="px-3 font-bold text-[#3d1a2e] text-[13px]">{row.supplier}</td>
                         <td className="px-3 text-[#6b4153] text-[13px]">{row.date}</td>
                         <td className="px-3 font-black text-[#b91c1c] text-[14px] text-right">{row.amount.toLocaleString()} ₫</td>
                         <td className="px-3 text-center">
                           {row.status === 'Chưa thanh toán' ? (
-                            <span className="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><Clock size={12}/> Chưa chi</span>
+                            <span className="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><Clock size={12}/> Chờ chi</span>
                           ) : (
                             <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold inline-flex items-center gap-1"><CheckCircle2 size={12}/> Đã chi</span>
                           )}
                         </td>
                         <td className="px-3 text-center">
                           {row.status === 'Chưa thanh toán' ? (
-                            <button onClick={() => openPaymentModal(row.id, row.supplier, row.amount)} className="px-3 py-1.5 bg-[#3d1a2e] hover:bg-[#2a111f] text-white rounded-lg text-[11px] font-bold transition-all inline-flex items-center gap-1.5 shadow-md">
-                              <CreditCard size={14}/> Lập Phiếu Chi
+                            <button onClick={() => setPaymentModal({ isOpen: true, id: row.id, supplier: row.supplier, amount: row.amount, accountId: 111, type: row.type })} className="px-3 py-1.5 bg-[#3d1a2e] hover:bg-[#2a111f] text-white rounded-lg text-[11px] font-bold transition-all inline-flex items-center gap-1.5 shadow-md">
+                              <CreditCard size={14}/> Thanh Toán
                             </button>
                           ) : (
                             <span className="text-gray-400 text-[12px] italic">Hoàn tất</span>
@@ -322,9 +351,65 @@ export function Finance() {
                 </tbody>
               </table>
             </div>
+
+            {/* PHẦN LỊCH SỬ CHI TIỀN MỚI THÊM */}
+            <div style={glassCard} className="p-6 mt-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl"><RotateCcw size={20} /></div>
+                <h2 className="text-[#3d1a2e] text-[16px] font-bold">Lịch Sử Chi Tiền (Đã thanh toán)</h2>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-[#9d6b7a] text-[11px] uppercase tracking-wider border-b border-gray-100">
+                      <th className="py-3 px-3">Loại chi</th>
+                      <th className="px-3">Nội dung / Ghi chú</th>
+                      <th className="px-3">Tài khoản chi</th>
+                      <th className="px-3 text-center">Thời gian</th>
+                      <th className="px-3 text-right">Số tiền</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoadingHistory ? (
+                      <tr><td colSpan={5} className="py-10 text-center text-[#9d6b7a]">Đang tải lịch sử...</td></tr>
+                    ) : paymentHistory.length === 0 ? (
+                      <tr><td colSpan={5} className="py-10 text-center text-[#9d6b7a]">Chưa có dữ liệu chi tiền.</td></tr>
+                    ) : (
+                      paymentHistory.map((h) => (
+                        <tr key={h.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                          <td className="py-4 px-3">
+                            <span className={`px-2 py-1 rounded-lg text-[10px] font-bold ${
+                              h.type === 'LUONG' ? 'bg-purple-100 text-purple-700' : 
+                              h.type === 'MUA' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {h.type === 'LUONG' ? 'LƯƠNG NHÂN VIÊN' : h.type === 'MUA' ? 'NỢ NHÀ CUNG CẤP' : 'CHI KHÁC'}
+                            </span>
+                          </td>
+                          <td className="px-3">
+                            <p className="text-[13px] font-medium text-[#3d1a2e]">{h.desc}</p>
+                          </td>
+                          <td className="px-3">
+                            <div className="flex items-center gap-2">
+                              <Landmark size={14} className="text-[#D4AF37]" />
+                              <span className="text-[12px] text-[#6b4153] font-bold">{h.accountName}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 text-center text-[#9d6b7a] text-[12px]">{h.date}</td>
+                          <td className="px-3 text-right">
+                            <p className="text-[14px] font-black text-red-600">-{h.amount.toLocaleString()} ₫</p>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </div>
+
 
       {/* ========================================================= */}
       {/* MODAL CHỌN PHƯƠNG THỨC THANH TOÁN (MỚI) */}

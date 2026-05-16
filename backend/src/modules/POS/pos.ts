@@ -49,8 +49,8 @@ router.post('/orders/charge', async (req: Request, res: Response): Promise<any> 
     const finalCustomerId = (customerId && customerId !== 'GUEST') ? parseInt(customerId) : 1;
     await connection.execute(`
       INSERT INTO DON_HANG (MACUAHANG, MADOITAC, MANHANVIEN, NGAYTAO, TONGTIENTAMTINH, DIEMMUONDUNG, TRANGTHAI, GHICHU)
-      VALUES (1, :p_khachhang, 1, SYSDATE, :p_tongtien, 0, N'Chờ thanh toán', N'Thanh toán tại POS')
-    `, { p_khachhang: finalCustomerId, p_tongtien: Math.round(total) });
+      VALUES (1, :p_khachhang, 1, SYSDATE, 0, 0, N'Chờ thanh toán', N'Thanh toán tại POS')
+    `, { p_khachhang: finalCustomerId });
 
     const resultGetId = await connection.execute(`SELECT MAX(MADONHANG) as newId FROM DON_HANG`, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
     const newOrderId = (resultGetId.rows as any[])[0]?.NEWID;

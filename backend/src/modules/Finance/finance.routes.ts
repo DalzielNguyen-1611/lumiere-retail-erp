@@ -82,25 +82,71 @@ router.put('/finance/pay/:id', async (req: Request, res: Response) => {
   let connection;
   try {
     const { id } = req.params;
-    const { accountId } = req.body; 
+    const { accountId, type } = req.body; 
     
     // Đảm bảo chỉ nhận 111 (Tiền mặt) hoặc 112 (Chuyển khoản)
     const validAccountId = accountId === 112 ? 112 : 111;
     const phuongThuc = validAccountId === 112 ? 'Chuyển khoản' : 'Tiền mặt';
 
     connection = await oracledb.getConnection(dbConfig);
-    // Procedure trong Oracle tự động handle Commit/Rollback bên trong (hoặc gọi từ Node.js)
     
-    // Gọi thẳng Procedure để xử lý thay vì viết 4 câu lệnh rời rạc
-    await connection.execute(
-      `BEGIN SP_THANH_TOAN_HOA_DON_MUA(:id, :acc, :pt); END;`,
-      { id: Number(id), acc: validAccountId, pt: phuongThuc },
-      { autoCommit: true } // Auto-commit luôn vì đã gói gọn trong 1 transaction
-    );
+    if (type === 'LUONG') {
+      // Gọi Procedure chi lương
+      await connection.execute(
+        `BEGIN SP_THANH_TOAN_LUONG(:id, :acc, :note); END;`,
+        { 
+          id: Number(id), 
+          acc: validAccountId, 
+          note: `Chi trả lương nhân viên - Phiếu SAL-${id} (${phuongThuc})` 
+        },
+        { autoCommit: true }
+      );
+    } else {
+      // Gọi Procedure chi trả hóa đơn mua hàng
+      await connection.execute(
+        `BEGIN SP_THANH_TOAN_HOA_DON_MUA(:id, :acc, :pt); END;`,
+        { id: Number(id), acc: validAccountId, pt: phuongThuc },
+        { autoCommit: true }
+      );
+    }
 
     res.json({ status: 'success', message: 'Thanh toán thành công!' });
   } catch (err: any) {
     if (connection) await connection.rollback();
+    res.status(500).json({ status: 'error', message: err.message });
+  } finally {
+    if (connection) await connection.close();
+  }
+});
+
+// ============================================================================
+// 4. [GET] /finance/payment-history -> Lấy lịch sử chi tiền (Phân loại)
+// ============================================================================
+router.get('/finance/payment-history', async (req: Request, res: Response) => {
+  let connection;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const sql = `
+      SELECT 
+        g.MAGIAODICH as "id",
+        g.SOTIEN as "amount",
+        TO_CHAR(g.NGAYGIAODICH, 'DD/MM/YYYY HH24:MI') as "date",
+        g.GHICHU as "desc",
+        t.TENTAIKHOAN as "accountName",
+        CASE 
+          WHEN g.MAPHIEULUONG IS NOT NULL THEN 'LUONG'
+          WHEN g.MAHOADONMUA IS NOT NULL THEN 'MUA'
+          ELSE 'KHAC'
+        END as "type"
+      FROM GIAO_DICH_TIEN g
+      JOIN TAI_KHOAN t ON g.MATAIKHOAN = t.MATAIKHOAN
+      WHERE g.LOAIGIAODICH = 'CHI'
+      ORDER BY g.NGAYGIAODICH DESC
+      FETCH FIRST 50 ROWS ONLY
+    `;
+    const result = await connection.execute(sql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    res.json({ status: 'success', data: result.rows || [] });
+  } catch (err: any) {
     res.status(500).json({ status: 'error', message: err.message });
   } finally {
     if (connection) await connection.close();
