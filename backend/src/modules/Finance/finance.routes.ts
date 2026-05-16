@@ -22,10 +22,32 @@ router.get('/finance', async (req: Request, res: Response) => {
       FROM TAI_KHOAN ORDER BY MATAIKHOAN ASC`, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
 
     const txResult = await connection.execute(`
-      SELECT g.MAGIAODICH as "id", g.GHICHU as "desc", g.SOTIEN as "amount", TO_CHAR(g.NGAYGIAODICH, 'DD/MM/YYYY HH24:MI') as "date", t.TENTAIKHOAN as "accountName"
-      FROM GIAO_DICH_TIEN g JOIN TAI_KHOAN t ON g.MATAIKHOAN = t.MATAIKHOAN ORDER BY g.NGAYGIAODICH DESC FETCH FIRST 20 ROWS ONLY`, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+      SELECT 
+        g.MAGIAODICH as "id", 
+        g.GHICHU as "desc", 
+        g.SOTIEN as "amount", 
+        g.LOAIGIAODICH as "type",
+        TO_CHAR(g.NGAYGIAODICH, 'DD/MM/YYYY HH24:MI') as "date", 
+        t.TENTAIKHOAN as "accountName"
+      FROM GIAO_DICH_TIEN g 
+      JOIN TAI_KHOAN t ON g.MATAIKHOAN = t.MATAIKHOAN 
+      ORDER BY g.NGAYGIAODICH DESC 
+      FETCH FIRST 20 ROWS ONLY`, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
 
-    res.json({ status: 'success', data: { accounts: accountsResult.rows || [], transactions: txResult.rows || [] } });
+    const processedTransactions = (txResult.rows as any[]).map(tx => {
+      // Logic xác định dấu: Nếu là các loại CHI hoặc Trả nợ thì mang dấu ÂM
+      const isNegative = tx.type && (
+        tx.type.toUpperCase().includes('CHI') || 
+        tx.type.includes('Tất toán') ||
+        tx.type.includes('Giảm')
+      );
+      return {
+        ...tx,
+        amount: isNegative ? -tx.amount : tx.amount
+      };
+    });
+
+    res.json({ status: 'success', data: { accounts: accountsResult.rows || [], transactions: processedTransactions } });
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); } 
   finally { if (connection) await connection.close(); }
 });

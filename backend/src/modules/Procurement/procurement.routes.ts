@@ -134,7 +134,7 @@ router.get('/orders', async (req: Request, res: Response): Promise<any> => {
         pk.SOPHIEU AS "ticketCode"
       FROM HOA_DON_MUA_HANG hd
       JOIN DOI_TAC dt ON hd.MADOITAC = dt.MADOITAC
-      LEFT JOIN PHIEU_KHO pk ON hd.MAHOADONMUA = pk.MAHOADON
+      LEFT JOIN PHIEU_KHO pk ON hd.MAHOADONMUA = pk.MAHOADON AND pk.LOAIPHIEU = 'Nhập kho'
       ORDER BY hd.NGAYLAP DESC, hd.MAHOADONMUA DESC
     `;
     const result = await connection.execute(sql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
@@ -211,6 +211,21 @@ router.post('/orders', async (req: Request, res: Response): Promise<any> => {
         soPhieu: phieuKhoCode, spId: item.productId, qty: item.quantity, price: item.price, total: item.quantity * item.price
       });
     }
+
+    // 5. HẠCH TOÁN KẾ TOÁN (Ghi vào sổ cái và lưu lịch sử giao dịch)
+    // - Nợ TK 156 (Hàng hóa): Tăng giá trị tồn kho
+    await connection.execute(`
+      INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+      VALUES (1, 156, 'Nhập hàng', :total, SYSTIMESTAMP, :note)
+    `, { total: totalValue, note: 'Nhập hàng hóa từ PO-' + newHoaDonId });
+    await connection.execute(`UPDATE TAI_KHOAN SET SODUHIENTAI = SODUHIENTAI + :total WHERE MATAIKHOAN = 156`, { total: totalValue });
+
+    // - Có TK 331 (Phải trả người bán): Tăng nợ phải trả
+    await connection.execute(`
+      INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+      VALUES (1, 331, 'Ghi nhận nợ', :total, SYSTIMESTAMP, :note)
+    `, { total: totalValue, note: 'Phải trả NCC từ PO-' + newHoaDonId });
+    await connection.execute(`UPDATE TAI_KHOAN SET SODUHIENTAI = SODUHIENTAI + :total WHERE MATAIKHOAN = 331`, { total: totalValue });
 
     await connection.commit();
     res.json({ status: 'success', message: 'Tạo đơn nhập hàng và Phiếu kho thành công!' });

@@ -131,6 +131,34 @@ BEGIN
             );
             UPDATE TAI_KHOAN SET SODUHIENTAI = NVL(SODUHIENTAI,0) + v_thuevat WHERE MATAIKHOAN = 3331;
         END IF;
+
+        -- 4. Hạch toán Giá vốn (COGS) & Giảm kho (TK 156)
+        DECLARE
+            v_tong_gia_von NUMBER := 0;
+            v_gia_von_don_vi NUMBER;
+        BEGIN
+            FOR item IN (SELECT MASANPHAM, SOLUONG, DONGIA FROM CHI_TIET_DON_HANG WHERE MADONHANG = p_MADONHANG) LOOP
+                -- Tính giá vốn bình quân (Weighted Average Cost) từ lịch sử nhập hàng
+                SELECT NVL(
+                    (SELECT SUM(THANHTIEN) / SUM(SOLUONG) FROM CHI_TIET_HOA_DON_MUA_HANG WHERE MASANPHAM = item.MASANPHAM),
+                    item.DONGIA * 0.6
+                ) INTO v_gia_von_don_vi FROM DUAL;
+                
+                v_tong_gia_von := v_tong_gia_von + (v_gia_von_don_vi * item.SOLUONG);
+            END LOOP;
+
+            IF v_tong_gia_von > 0 THEN
+                -- Ghi Nợ TK 632 (Giá vốn)
+                INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+                VALUES (v_MACUAHANG, 632, 'Ghi nhận giá vốn', v_tong_gia_von, SYSTIMESTAMP, 'Giá vốn đơn hàng #' || p_MADONHANG);
+                UPDATE TAI_KHOAN SET SODUHIENTAI = SODUHIENTAI + v_tong_gia_von WHERE MATAIKHOAN = 632;
+
+                -- Ghi Có TK 156 (Giảm hàng hóa)
+                INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+                VALUES (v_MACUAHANG, 156, 'CHI', v_tong_gia_von, SYSTIMESTAMP, 'Xuất kho bán hàng đơn #' || p_MADONHANG);
+                -- Trigger TRG_UPDATE_BANK_BALANCE sẽ tự động giảm SODUHIENTAI của 156 vì LOAIGIAODICH = 'CHI'
+            END IF;
+        END;
     END;
     COMMIT;
 
@@ -614,17 +642,26 @@ BEGIN
         PHUONGTHUCTHANHTOAN = p_phuongthuc 
     WHERE MAHOADONMUA = p_mahoadon;
 
-    -- 3. Tạo phiếu chi tiền tự động (Âm tiền)
+    -- 3. Tạo phiếu chi tiền từ tài khoản Thanh toán (111/112)
     INSERT INTO GIAO_DICH_TIEN (
         MACUAHANG, MATAIKHOAN, LOAIGIAODICH, 
         SOTIEN, NGAYGIAODICH, GHICHU
     ) VALUES (
-        1, p_mataikhoan, 'Chi trả NCC', 
-        -v_tongtien, SYSTIMESTAMP, 'Thanh toán hóa đơn nhập hàng: ' || NVL(v_sohoadon, TO_CHAR(p_mahoadon))
+        1, p_mataikhoan, 'CHI', 
+        v_tongtien, SYSTIMESTAMP, 'Chi trả NCC - Hóa đơn: ' || NVL(v_sohoadon, TO_CHAR(p_mahoadon))
     );
 
-    -- LƯU Ý: Không cần UPDATE TAI_KHOAN ở đây nếu bạn đã có 
-    -- Trigger TRG_UPDATE_BANK_BALANCE tự động cập nhật số dư khi có Giao dịch tiền.
+    -- 4. Ghi nhận giảm nợ phải trả trên TK 331 (Lưu lịch sử)
+    INSERT INTO GIAO_DICH_TIEN (
+        MACUAHANG, MATAIKHOAN, LOAIGIAODICH, 
+        SOTIEN, NGAYGIAODICH, GHICHU
+    ) VALUES (
+        1, 331, 'CHI', 
+        v_tongtien, SYSTIMESTAMP, 'Tất toán nợ NCC - Hóa đơn: ' || NVL(v_sohoadon, TO_CHAR(p_mahoadon))
+    );
+
+    -- LƯU Ý: Không cần UPDATE TAI_KHOAN 111/112 và 331 ở đây vì đã có 
+    -- Trigger TRG_UPDATE_BANK_BALANCE tự động cập nhật số dư khi có Giao dịch tiền loại 'CHI'.
     
     COMMIT;
 EXCEPTION
