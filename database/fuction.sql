@@ -1,0 +1,409 @@
+-- ============================================================
+-- TỔNG HỢP FUNCTIONS (21 Items)
+-- ============================================================
+
+-- 1. FUNC_TINH_HANG_THE
+CREATE OR REPLACE FUNCTION FUNC_TINH_HANG_THE (p_diem NUMBER)
+RETURN NVARCHAR2
+IS
+    v_hang NVARCHAR2(50);
+BEGIN
+    IF p_diem >= 5000 THEN 
+        v_hang := 'Kim Cương';
+    ELSIF p_diem >= 3000 THEN 
+        v_hang := 'Vàng';
+    ELSIF p_diem >= 1000 THEN 
+        v_hang := 'Bạc';
+    ELSE 
+        v_hang := 'Thường';
+    END IF;
+
+    RETURN v_hang;
+END FUNC_TINH_HANG_THE;
+/
+
+-- 2. FUNC_TINH_DOANH_THU_THANG
+CREATE OR REPLACE FUNCTION FUNC_TINH_DOANH_THU_THANG (
+    p_macuahang NUMBER, 
+    p_thang NUMBER, 
+    p_nam NUMBER
+) RETURN NUMBER IS
+    v_kq NUMBER;
+BEGIN 
+    SELECT NVL(SUM(TONGTIEN), 0) 
+    INTO v_kq 
+    FROM HOA_DON_BAN_HANG 
+    WHERE MACUAHANG = p_macuahang 
+      AND EXTRACT(MONTH FROM NGAYBAN) = p_thang 
+      AND EXTRACT(YEAR FROM NGAYBAN) = p_nam; 
+    
+    RETURN v_kq; 
+END; 
+/
+
+-- 3. FUNC_GET_TON_KHO
+CREATE OR REPLACE FUNCTION FUNC_GET_TON_KHO (
+    p_masanpham NUMBER, 
+    p_makho NUMBER
+) RETURN NUMBER IS
+    v_kq NUMBER;
+BEGIN 
+    SELECT SOLUONGTON 
+    INTO v_kq 
+    FROM TON_KHO 
+    WHERE MASANPHAM = p_masanpham 
+      AND MAKHO = p_makho; 
+      
+    RETURN v_kq; 
+EXCEPTION 
+    WHEN NO_DATA_FOUND THEN 
+        RETURN 0; 
+END; 
+/
+
+-- 4. FUNC_TINH_GIA_BAN_THUC_TE
+CREATE OR REPLACE FUNCTION FUNC_TINH_GIA_BAN_THUC_TE (
+    p_masanpham NUMBER
+) RETURN NUMBER IS
+    v_gia NUMBER; 
+    v_thue FLOAT;
+BEGIN 
+    SELECT GIANIEMYET, THUE 
+    INTO v_gia, v_thue 
+    FROM SAN_PHAM 
+    WHERE MASANPHAM = p_masanpham; 
+    
+    RETURN v_gia + (v_gia * v_thue / 100); 
+EXCEPTION 
+    WHEN NO_DATA_FOUND THEN 
+        RETURN 0; 
+END; 
+/
+
+-- 5. FUNC_CHECK_QUYEN_NHAN_VIEN
+CREATE OR REPLACE FUNCTION FUNC_CHECK_QUYEN_NHAN_VIEN (
+    p_manhanvien NUMBER, 
+    p_quyenhan NVARCHAR2
+) RETURN NUMBER IS
+    v_count NUMBER;
+BEGIN 
+    SELECT COUNT(*) 
+    INTO v_count 
+    FROM PHAN_QUYEN_NHAN_VIEN PQ 
+    JOIN VAI_TRO VT ON PQ.MAVAITRO = VT.MAVAITRO 
+    WHERE PQ.MANHANVIEN = p_manhanvien 
+      AND VT.QUYENHAN LIKE '%' || p_quyenhan || '%'; 
+      
+    IF v_count > 0 THEN 
+        RETURN 1; 
+    ELSE 
+        RETURN 0; 
+    END IF;
+END; 
+/
+
+-- 6. FUNC_CALC_THUE_TNCN_LUY_TIEN
+CREATE OR REPLACE FUNCTION FUNC_CALC_THUE_TNCN_LUY_TIEN (
+    p_thunhap NUMBER
+) RETURN NUMBER IS
+BEGIN 
+    IF p_thunhap <= 5000000 THEN 
+        RETURN p_thunhap * 0.05; 
+    ELSIF p_thunhap <= 10000000 THEN 
+        RETURN (5000000 * 0.05) + ((p_thunhap - 5000000) * 0.1); 
+    ELSE 
+        RETURN (5000000 * 0.05) + (5000000 * 0.1) + ((p_thunhap - 10000000) * 0.15); 
+    END IF; 
+END; 
+/
+
+-- 7. FUNC_CALC_LOI_NHUAN_SP
+CREATE OR REPLACE FUNCTION FUNC_CALC_LOI_NHUAN_SP (
+    p_masanpham NUMBER
+) RETURN NUMBER IS
+    v_giaban NUMBER; 
+    v_gianhap NUMBER;
+BEGIN 
+    SELECT GIANIEMYET 
+    INTO v_giaban 
+    FROM SAN_PHAM 
+    WHERE MASANPHAM = p_masanpham; 
+    
+    SELECT NVL(AVG(DONGIA), 0) 
+    INTO v_gianhap 
+    FROM CHI_TIET_HOA_DON_MUA_HANG 
+    WHERE MASANPHAM = p_masanpham; 
+    
+    RETURN v_giaban - v_gianhap; 
+END; 
+/
+
+-- 8. FUNC_TINH_SO_NGAY_PHEP_CON_LAI
+CREATE OR REPLACE FUNCTION FUNC_TINH_SO_NGAY_PHEP_CON_LAI (
+    p_manhanvien NUMBER, 
+    p_nam NUMBER
+) RETURN NUMBER IS
+    v_conlai NUMBER;
+BEGIN 
+    SELECT CONLAI 
+    INTO v_conlai 
+    FROM QUAN_LY_PHEP 
+    WHERE MANHANVIEN = p_manhanvien 
+      AND NAM = p_nam; 
+      
+    RETURN v_conlai; 
+EXCEPTION 
+    WHEN NO_DATA_FOUND THEN 
+        RETURN 0; 
+END; 
+/
+
+-- 9. FUNC_GET_TONG_CHI_PHI_THANG
+CREATE OR REPLACE FUNCTION FUNC_GET_TONG_CHI_PHI_THANG (
+    p_thang NUMBER, 
+    p_nam NUMBER
+) RETURN NUMBER IS
+    v_cp1 NUMBER; 
+    v_cp2 NUMBER;
+BEGIN 
+    SELECT NVL(SUM(TONGTIEN), 0) 
+    INTO v_cp1 
+    FROM HOA_DON_MUA_HANG 
+    WHERE EXTRACT(MONTH FROM NGAYLAP) = p_thang 
+      AND EXTRACT(YEAR FROM NGAYLAP) = p_nam; 
+      
+    SELECT NVL(SUM(LUONG), 0) 
+    INTO v_cp2 
+    FROM PHIEU_LUONG 
+    WHERE THANGNAM = p_thang || '/' || p_nam; 
+    
+    RETURN v_cp1 + v_cp2; 
+END; 
+/
+
+-- 10. FUNC_CHECK_HSD_SAN_PHAM
+CREATE OR REPLACE FUNCTION FUNC_CHECK_HSD_SAN_PHAM (
+    p_masanpham NUMBER
+) RETURN NUMBER IS
+    v_c NUMBER;
+BEGIN 
+    SELECT COUNT(*) 
+    INTO v_c 
+    FROM CHI_TIET_PHIEU 
+    WHERE MASANPHAM = p_masanpham 
+      AND HANSUDUNG <= SYSDATE + 30; 
+      
+    IF v_c > 0 THEN 
+        RETURN 1; 
+    ELSE 
+        RETURN 0; 
+    END IF;
+END; 
+/
+
+-- 11. FUNC_GET_SO_DU_TAI_KHOAN
+CREATE OR REPLACE FUNCTION FUNC_GET_SO_DU_TAI_KHOAN (
+    p_mataikhoan NUMBER
+) RETURN NUMBER IS
+    v_kq NUMBER;
+BEGIN 
+    SELECT SODUHIENTAI 
+    INTO v_kq 
+    FROM TAI_KHOAN 
+    WHERE MATAIKHOAN = p_mataikhoan; 
+    
+    RETURN v_kq; 
+END; 
+/
+
+-- 12. FUNC_CALC_TONG_GIA_TRI_DON_HANG
+CREATE OR REPLACE FUNCTION FUNC_CALC_TONG_GIA_TRI_DON_HANG (
+    p_madonhang NUMBER
+) RETURN NUMBER IS
+    v_kq NUMBER;
+BEGIN 
+    SELECT NVL(SUM(THANHTIEN), 0) 
+    INTO v_kq 
+    FROM CHI_TIET_DON_HANG 
+    WHERE MADONHANG = p_madonhang; 
+    
+    RETURN v_kq; 
+END; 
+/
+
+-- 13. FUNC_CALC_TIEN_HOAN_TRA
+CREATE OR REPLACE FUNCTION FUNC_CALC_TIEN_HOAN_TRA (
+    p_maphieu NUMBER
+) RETURN NUMBER IS
+    v_kq NUMBER;
+BEGIN 
+    SELECT NVL(SUM(SOLUONG_TRA * DONGIA_TRA) - SUM(NVL(SOLUONG_DOI, 0) * NVL(DONGIA_DOI, 0)), 0) 
+    INTO v_kq 
+    FROM CHI_TIET_DOI_TRA 
+    WHERE MAPHIEU = p_maphieu; 
+    
+    IF v_kq > 0 THEN 
+        RETURN v_kq; 
+    ELSE 
+        RETURN 0; 
+    END IF;
+END; 
+/
+
+-- 14. FUNC_TONG_DOANH_THU_THEO_NV
+CREATE OR REPLACE FUNCTION FUNC_TONG_DOANH_THU_THEO_NV (
+    p_manv NUMBER
+) RETURN NUMBER IS
+    v_kq NUMBER;
+BEGIN 
+    SELECT NVL(SUM(TONGTIEN), 0) 
+    INTO v_kq 
+    FROM HOA_DON_BAN_HANG 
+    WHERE MANHANVIEN = p_manv; 
+    
+    RETURN v_kq; 
+END; 
+/
+
+-- 15. FUNC_CALC_GIA_VON_BINH_QUAN
+CREATE OR REPLACE FUNCTION FUNC_CALC_GIA_VON_BINH_QUAN (
+    p_masanpham NUMBER
+) RETURN NUMBER IS
+    v_kq NUMBER;
+BEGIN 
+    SELECT NVL(SUM(SOLUONG * DONGIA) / SUM(SOLUONG), 0) 
+    INTO v_kq 
+    FROM CHI_TIET_HOA_DON_MUA_HANG 
+    WHERE MASANPHAM = p_masanpham 
+    HAVING SUM(SOLUONG) > 0; 
+    
+    RETURN v_kq; 
+EXCEPTION 
+    WHEN NO_DATA_FOUND THEN 
+        RETURN 0; 
+END; 
+/
+
+-- 16. FUNC_GET_NGAY_NHAP_GAN_NHAT
+CREATE OR REPLACE FUNCTION FUNC_GET_NGAY_NHAP_GAN_NHAT (
+    p_masanpham NUMBER
+) RETURN DATE IS
+    v_kq DATE;
+BEGIN 
+    SELECT MAX(PK.NGAYTHUCPHE) 
+    INTO v_kq 
+    FROM PHIEU_KHO PK 
+    JOIN CHI_TIET_PHIEU CP ON PK.SOPHIEU = CP.SOPHIEU 
+    WHERE CP.MASANPHAM = p_masanpham 
+      AND PK.LOAIPHIEU LIKE '%nhập%'; 
+      
+    RETURN v_kq; 
+END; 
+/
+
+-- 17. FUNC_CHECK_TON_KHO_TOI_THIEU
+CREATE OR REPLACE FUNCTION FUNC_CHECK_TON_KHO_TOI_THIEU (
+    p_masanpham NUMBER, 
+    p_makho NUMBER, 
+    p_min NUMBER
+) RETURN NUMBER IS
+    v_kq NUMBER;
+BEGIN 
+    SELECT SOLUONGTON 
+    INTO v_kq 
+    FROM TON_KHO 
+    WHERE MASANPHAM = p_masanpham 
+      AND MAKHO = p_makho; 
+      
+    IF v_kq < p_min THEN 
+        RETURN 1; 
+    ELSE 
+        RETURN 0; 
+    END IF;
+EXCEPTION 
+    WHEN NO_DATA_FOUND THEN 
+        RETURN 1; 
+END; 
+/
+
+-- 18. FUNC_TONG_NO_NCC
+CREATE OR REPLACE FUNCTION FUNC_TONG_NO_NCC (
+    p_mancc NUMBER
+) RETURN NUMBER IS
+    v_kq NUMBER;
+BEGIN 
+    SELECT NVL(SUM(TONGTIEN), 0) 
+    INTO v_kq 
+    FROM HOA_DON_MUA_HANG 
+    WHERE MADOITAC = p_mancc 
+      AND TRANGTHAI_THANHTOAN != 'Đã thanh toán'; 
+      
+    RETURN v_kq; 
+END; 
+/
+
+-- 19. FUNC_TONG_DIEM_DA_DUNG
+CREATE OR REPLACE FUNCTION FUNC_TONG_DIEM_DA_DUNG (
+    p_makh NUMBER
+) RETURN NUMBER IS
+    v_kq NUMBER;
+BEGIN 
+    SELECT NVL(SUM(DIEMSUDUNG), 0) 
+    INTO v_kq 
+    FROM HOA_DON_BAN_HANG 
+    WHERE MADOITAC = p_makh; 
+    
+    RETURN v_kq; 
+END; 
+/
+
+-- 20. FUNC_LAY_DUONG_DAN_DANH_MUC
+CREATE OR REPLACE FUNCTION FUNC_LAY_DUONG_DAN_DANH_MUC (
+    p_madm NUMBER
+) RETURN NVARCHAR2 IS
+    v_kq NVARCHAR2(2000); 
+    v_parent NUMBER; 
+    v_ten NVARCHAR2(500);
+BEGIN
+    SELECT TENDANHMUC, MADANHMUCCHA 
+    INTO v_kq, v_parent 
+    FROM DANH_MUC 
+    WHERE MADANHMUC = p_madm;
+    
+    WHILE v_parent IS NOT NULL LOOP
+        SELECT TENDANHMUC, MADANHMUCCHA 
+        INTO v_ten, v_parent 
+        FROM DANH_MUC 
+        WHERE MADANHMUC = v_parent;
+        
+        v_kq := v_ten || ' > ' || v_kq;
+    END LOOP; 
+    
+    RETURN v_kq;
+END; 
+/
+
+-- 21. FUNC_BAO_CAO_DONG_TIEN
+CREATE OR REPLACE FUNCTION FUNC_BAO_CAO_DONG_TIEN (
+    p_tu DATE, 
+    p_den DATE
+) RETURN NUMBER IS
+    v_thu NUMBER; 
+    v_chi NUMBER;
+BEGIN
+    SELECT NVL(SUM(SOTIEN), 0) 
+    INTO v_thu 
+    FROM GIAO_DICH_TIEN 
+    WHERE LOAIGIAODICH LIKE '%Thu%' 
+      AND NGAYGIAODICH BETWEEN p_tu AND p_den;
+      
+    SELECT NVL(SUM(SOTIEN), 0) 
+    INTO v_chi 
+    FROM GIAO_DICH_TIEN 
+    WHERE LOAIGIAODICH LIKE '%Chi%' 
+      AND NGAYGIAODICH BETWEEN p_tu AND p_den;
+      
+    RETURN v_thu - v_chi;
+END; 
+/
+

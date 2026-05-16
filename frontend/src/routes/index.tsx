@@ -1,109 +1,93 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AuthLayout } from "../components/layout/AuthLayout";
+
+// Import các Trang cốt lõi
 import { Login } from "../pages/Login";
+import { Dashboard } from "../pages/Dashboard";
 import { POS } from "../pages/POS";
+import { Inventory } from "../pages/Inventory";
+import { Customers } from "../pages/Partners";
+import { TimeManagement } from "../pages/TimeManagement";
+
+// Import 8 Trang mới đã được tách module
+import { HR } from "../pages/HR";
+import { MultiStore } from "../pages/MultiStore";
+import { Logistics } from "../pages/Logistics";
+import { Procurement } from "../pages/Procurement";
+import { Finance } from "../pages/Finance";
+import { Returns } from "../pages/Returns";
+import { Settings } from "../pages/Settings";
 
 export const router = createBrowserRouter([
-  // 1. CHẶN Ở CỬA CHÍNH: Gõ http://localhost:5173/ sẽ tự động nhảy sang /login
-  {
-    path: "/",
-    element: <Navigate to="/login" replace />,
-  },
-  
-  // 2. TRANG ĐĂNG NHẬP
+  // 1. TRANG ĐĂNG NHẬP (Public)
   {
     path: "/login",
     element: <Login />,
   },
-  
-  // 3. KHU VỰC NỘI BỘ (Đã được bảo vệ bởi AuthLayout)
+
+  // 2. KHU VỰC NỘI BỘ (Bọc bởi AuthLayout và Sidebar)
   {
+    path: "/",
     element: <AuthLayout />, 
     children: [
+      // Mặc định khi vào "/" sẽ nhảy vào Dashboard
       {
-        path: "/dashboard",
-        element: (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold text-pink-600">Lumière Dashboard</h1>
-            <p className="text-gray-500 mt-2">Hệ thống đã sẵn sàng!</p>
-          </div>
-        ),
+        index: true,
+        element: <Navigate to="/dashboard" replace />,
       },
       {
-        path: "/pos",
-        element: <POS />, // CHỈ CẦN NGẮN GỌN THẾ NÀY THÔI
+        path: "dashboard",
+        element: <Dashboard />,
       },
       {
-        path: "/inventory",
-        element: (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold">Inventory</h1>
-            <p className="text-gray-500 mt-2">Inventory module placeholder</p>
-          </div>
-        ),
+        path: "pos",
+        element: <POS />,
       },
       {
-        path: "/finance",
-        element: (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold">Finance</h1>
-            <p className="text-gray-500 mt-2">Finance module placeholder</p>
-          </div>
-        ),
+        path: "inventory",
+        element: <Inventory />,
       },
       {
-        path: "/hrm",
-        element: (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold">HR & Payroll</h1>
-            <p className="text-gray-500 mt-2">HRM module placeholder</p>
-          </div>
-        ),
+        path: "customers",
+        element: <Customers />,
       },
       {
-        path: "/customers",
-        element: (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold">Customers</h1>
-          </div>
-        ),
+        path: "time-management",
+        element: <TimeManagement />, // 👈 2. THÊM ROUTE NÀY VÀO ĐÂY
+      },
+      // --- 8 ROUTES MỚI ĐÃ TÁCH ---
+      {
+        path: "hr",
+        element: <HR />,
       },
       {
-        path: "/orders",
-        element: (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold">Orders</h1>
-          </div>
-        ),
+        path: "multi-store",
+        element: <MultiStore />,
       },
       {
-        path: "/receiving",
-        element: (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold">Receiving</h1>
-          </div>
-        ),
+        path: "logistics",
+        element: <Logistics />,
       },
       {
-        path: "/reports",
-        element: (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold">Reports</h1>
-          </div>
-        ),
+        path: "procurement",
+        element: <Procurement />,
       },
       {
-        path: "/stores",
-        element: (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold">Stores</h1>
-          </div>
-        ),
+        path: "finance",
+        element: <Finance />,
+      },
+      {
+        path: "returns",
+        element: <Returns />,
+      },
+      {
+        path: "settings",
+        element: <Settings />,
       },
     ],
   },
-  
-  // 4. BẮT LỖI GÕ BẬY: Gõ đường dẫn không tồn tại (vd: /linhtinh) cũng đẩy về /login
+
+  // 3. BẮT LỖI ĐƯỜNG DẪN LẠ (Trang không tồn tại sẽ bị đá về Login)
   {
     path: "*",
     element: <Navigate to="/login" replace />,

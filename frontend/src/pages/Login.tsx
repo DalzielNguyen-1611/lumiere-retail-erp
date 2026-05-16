@@ -51,9 +51,9 @@ export function Login() {
         const userData = json.data.user;
         const token = json.data.token;
         // normalize user shape expected by AuthContext
-        const user = { maNhanVien: userData.maNhanVien, username: userData.username, role: userData.role } as any;
+        const user = { maNhanVien: userData.maNhanVien, username: userData.username, name: userData.name, role: userData.role } as any;
         login(user, token);
-        const defaultPath = roleConfig[userData.role]?.defaultPath || "/dashboard";
+        const defaultPath = roleConfig[userData.role as keyof typeof roleConfig]?.defaultPath || "/dashboard";
         navigate(defaultPath, { replace: true });
         setLoading(false);
         return;

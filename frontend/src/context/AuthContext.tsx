@@ -4,10 +4,22 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 export const roleConfig = {
   admin: {
     defaultPath: "/dashboard",
-  allowedPaths: ["/dashboard", "/inventory", "/hrm", "/finance"],
-  color: "#D4AF37",
-  label: "Admin",
-  labelVi: "Quản trị viên",
+    // Cấp thẻ VIP đi được mọi nơi:
+    allowedPaths: [
+      "/dashboard", 
+      "/pos", 
+      "/inventory", 
+      "/sales", 
+      "/customers", 
+      "/analytics", 
+      "/hr-payroll", 
+      "/multi-store", 
+      "/procurement", 
+      "/settings"
+    ],
+    color: "#D4AF37", 
+    label: "Administrator",
+    labelVi: "Quản trị viên",
   },
   staff: {
     defaultPath: "/pos",
@@ -31,11 +43,12 @@ export const roleConfig = {
   labelVi: "Nhân viên kho",
   },
   accounting: {
-    defaultPath: "/finance",
-  allowedPaths: ["/finance", "/reports"],
-  color: "#F97316",
-  label: "Accounting",
-  labelVi: "Kế toán",
+    defaultPath: "/dashboard", // Đăng nhập xong cho vào xem Dashboard đầu tiên
+    // Cấp phép cho họ vào đúng những trang đã khai báo ở Sidebar:
+    allowedPaths: ["/dashboard", "/sales", "/analytics", "/hr-payroll", "/procurement"],
+    color: "#10B981", // Màu xanh lá hoặc đổi thành "#F97316" tùy bạn
+    label: "Accounting",
+    labelVi: "Kế toán",
   },
   manager: {
     defaultPath: "/dashboard",
@@ -44,6 +57,7 @@ export const roleConfig = {
   label: "Manager",
   labelVi: "Quản lý",
   },
+  
 };
 
 export type UserRole = 'admin' | 'staff' | 'sales' | 'warehouse' | 'accounting' | 'manager';
@@ -52,6 +66,7 @@ export type UserRole = 'admin' | 'staff' | 'sales' | 'warehouse' | 'accounting' 
 export interface User {
   maNhanVien: number;
   username: string;
+  name?: string;
   role: UserRole; // Đã cập nhật để nhận full các role từ Backend gửi về
 }
 

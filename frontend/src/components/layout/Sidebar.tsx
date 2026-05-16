@@ -1,20 +1,9 @@
 import React from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Package,
-  ShoppingBag,
-  Users,
-  BarChart3,
-  Sparkles,
-  LogOut,
-  Monitor,
-  UserCog,
-  Building2,
-  FileSpreadsheet,
-  Settings2,
-  Clock,
-  ShieldCheck,
+  LayoutDashboard, Package, ShoppingBag, Users, BarChart3, Sparkles, LogOut,
+  Monitor, UserCog, Building2, FileSpreadsheet, Settings2, Clock, ShieldCheck,
+  Wallet, Store, PieChart, CornerUpLeft, Truck // THÊM CÁC ICON NÀY
 } from "lucide-react";
 import { useAuth, roleConfig, type UserRole } from "../../context/AuthContext";
 
@@ -28,19 +17,21 @@ interface NavItemDef {
 }
 
 const mainNavItems: NavItemDef[] = [
-  { path: "/", icon: LayoutDashboard, label: "Dashboard", roles: ["admin", "manager"] },
-  { path: "/pos", icon: Monitor, label: "POS", roles: ["admin", "manager", "sales"] },
-  { path: "/inventory", icon: Package, label: "Inventory", roles: ["admin", "manager", "warehouse"] },
-  { path: "/sales", icon: ShoppingBag, label: "Sales", roles: ["admin", "manager"] },
-  { path: "/customers", icon: Users, label: "Customers", roles: ["admin", "manager"] },
-  { path: "/analytics", icon: BarChart3, label: "Analytics", roles: ["admin"] },
+  { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["admin", "manager", "accounting", "warehouse"] },
+  { path: "/pos", icon: Monitor, label: "Bán hàng (POS)", roles: ["admin", "sales"] },
+  { path: "/customers", icon: Users, label: "Đối tác", roles: ["admin", "manager", "sales", "accounting"] },
+  { path: "/inventory", icon: Package, label: "Tồn kho", roles: ["admin", "manager", "warehouse", "accounting"] },
+  { path: "/returns", icon: CornerUpLeft, label: "Đổi trả", roles: ["admin", "manager", "sales", "warehouse", "accounting"] },
+  { path: "/logistics", icon: Truck, label: "Phiếu kho", roles: ["admin", "warehouse"] },
+  { path: "/time-management", icon: Clock, label: "Chấm công & Phép", roles: ["admin", "manager", "sales", "warehouse", "accounting"] },
 ];
 
 const opsNavItems: NavItemDef[] = [
-  { path: "/hr-payroll", icon: UserCog, label: "HR & Payroll", roles: ["admin"] },
-  { path: "/multi-store", icon: Building2, label: "Multi-Store & Logistics", roles: ["admin", "warehouse"] },
-  { path: "/procurement", icon: FileSpreadsheet, label: "Procurement & Finance", roles: ["admin"] },
-  { path: "/settings", icon: Settings2, label: "Settings & Returns", roles: ["admin", "manager", "sales", "warehouse"] },
+  { path: "/finance", icon: PieChart, label: "Thu chi", roles: ["admin", "accounting", "manager"] },
+  { path: "/procurement", icon: ShoppingBag, label: "Mua hàng", roles: ["admin", "accounting", "manager", "warehouse"] },
+  { path: "/hr", icon: UserCog, label: "Nhân sự", roles: ["admin", "accounting", "manager"] },
+  { path: "/multi-store", icon: Store, label: "Chi nhánh", roles: ["admin", "manager", "warehouse"] },
+  { path: "/settings", icon: Settings2, label: "Cài đặt", roles: ["admin", "manager", "sales", "warehouse", "accounting"] },
 ];
 
 // Cập nhật đủ icon cho các Role (Tránh lỗi undefined)
