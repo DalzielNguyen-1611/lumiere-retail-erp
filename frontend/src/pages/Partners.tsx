@@ -1,6 +1,6 @@
 // File: src/pages/Customers.tsx
 import { useState, useEffect, useMemo } from "react";
-import { Search, Users, Heart, Star, UserPlus, CheckCircle2, XCircle, X } from "lucide-react";
+import { Search, Users, Heart, Star, UserPlus, CheckCircle2, XCircle, X, Sparkles } from "lucide-react";
 
 const glassCard = {
   background: "rgba(255,255,255,0.72)",
@@ -48,6 +48,12 @@ export function Customers() {
     setToast({show: true, message, type});
     setTimeout(() => setToast(prev => ({...prev, show: false})), 3000);
   };
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchCustomers = async () => {
     setIsLoading(true);
@@ -141,18 +147,23 @@ export function Customers() {
     <div className="p-8 min-h-screen relative">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500 }}>Customer Relationship Management</p>
-          <h1 style={{ color: "#3d1a2e", fontSize: "26px", fontWeight: 700, fontFamily: "'Playfair Display', serif" }}>Quản Lý Khách Hàng</h1>
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles size={16} color="#D4AF37" />
+            <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            </p>
+          </div>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>Quản Lý Khách Hàng</h1>
         </div>
         <button
           onClick={() => {
             setNewCustomer({ name: "", phone: "", email: "", address: "" });
             setIsAddModalOpen(true);
           }}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-transform hover:scale-105 text-white font-semibold"
-          style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)", boxShadow: "0 6px 20px rgba(212,175,55,0.4)" }}
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer"
+          style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}
         >
-          <UserPlus size={16} /> Thêm Khách Hàng
+          <UserPlus size={18} /> Thêm Khách Hàng
         </button>
       </div>
 
@@ -223,7 +234,7 @@ export function Customers() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
             <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600"><X size={20} /></button>
-            <h2 className="text-xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "'Playfair Display', serif" }}>Thêm Mới Khách Hàng</h2>
+            <h2 className="text-xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>Thêm Mới Khách Hàng</h2>
             <div className="space-y-4">
               <div>
                 <label className="block mb-1.5 text-[#9d6b7a] text-[12px] font-bold uppercase tracking-wider">Tên Khách Hàng *</label>
@@ -244,8 +255,8 @@ export function Customers() {
                 <input value={newCustomer.address} onChange={e => setNewCustomer({...newCustomer, address: e.target.value})} placeholder="Địa chỉ..." className="w-full p-3 rounded-xl border border-[rgba(212,175,55,0.3)] bg-[#fdfbf7] text-[13px] outline-none" />
               </div>
               <div className="flex gap-3 mt-6">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 rounded-xl font-semibold bg-red-50 text-red-600 text-[14px]">Hủy</button>
-                <button onClick={handleSaveCustomer} disabled={isSubmitting} className="flex-[2] py-3 rounded-xl font-bold text-white shadow-lg disabled:opacity-50" style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}>{isSubmitting ? "Đang xử lý..." : "Lưu Thông Tin"}</button>
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-4 rounded-2xl font-bold bg-red-50 text-red-600 text-[14px] transition-all hover:bg-red-100 active:scale-95">Hủy</button>
+                <button onClick={handleSaveCustomer} disabled={isSubmitting} className="flex-[2] py-4 rounded-2xl font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95 disabled:bg-gray-300 disabled:scale-100" style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}>{isSubmitting ? "Đang xử lý..." : "Lưu Thông Tin"}</button>
               </div>
             </div>
           </div>
@@ -256,7 +267,7 @@ export function Customers() {
       {selectedCustomer && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-            <h2 className="text-xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "'Playfair Display', serif" }}>Chỉnh Sửa Khách Hàng</h2>
+            <h2 className="text-xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>Chỉnh Sửa Khách Hàng</h2>
             <button onClick={() => setSelectedCustomer(null)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600"><X size={20} /></button>
             <div className="space-y-4">
               <div>
@@ -278,21 +289,31 @@ export function Customers() {
                 <input value={selectedCustomer.address} onChange={e => setSelectedCustomer({...selectedCustomer, address: e.target.value})} className="w-full p-3 rounded-xl border border-[rgba(212,175,55,0.3)] bg-[#fdfbf7] text-[13px] outline-none" />
               </div>
               <div className="flex gap-3 mt-6">
-                <button onClick={() => setSelectedCustomer(null)} className="flex-1 py-3 rounded-xl font-semibold bg-red-50 text-red-600 text-[14px]">Hủy</button>
-                <button onClick={handleUpdateCustomer} disabled={isUpdating} className="flex-[2] py-3 rounded-xl font-bold text-white shadow-lg disabled:opacity-50" style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}>{isUpdating ? "Đang lưu..." : "Cập Nhật"}</button>
+                <button onClick={() => setSelectedCustomer(null)} className="flex-1 py-4 rounded-2xl font-bold bg-red-50 text-red-600 text-[14px] transition-all hover:bg-red-100 active:scale-95">Hủy</button>
+                <button onClick={handleUpdateCustomer} disabled={isUpdating} className="flex-[2] py-4 rounded-2xl font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95 disabled:bg-gray-300 disabled:scale-100" style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}>{isUpdating ? "Đang lưu..." : "Cập Nhật"}</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* TOAST NOTIFICATION */}
+      {/* TOAST NOTIFICATION (Standardized) */}
       {toast.show && (
-        <div className="fixed bottom-10 right-10 z-[110] flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl bg-white border-l-4 animate-in slide-in-from-right-8" style={{ borderLeftColor: toast.type === "success" ? "#10b981" : "#ef4444" }}>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: toast.type === "success" ? "#d1fae5" : "#fee2e2" }}>
-            {toast.type === "success" ? <CheckCircle2 size={18} color="#10b981" /> : <XCircle size={18} color="#ef4444" />}
+        <div className="fixed top-24 right-8 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="bg-[#3d1a2e] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[320px] border border-white/10">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              toast.type === "success" ? "bg-emerald-500/20" : "bg-rose-500/20"
+            }`}>
+              {toast.type === "error" ? <AlertCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
+            </div>
+            <div>
+              <p className="font-bold text-[15px]">{toast.type === "success" ? "Thành công" : "Lỗi hệ thống"}</p>
+              <p className="text-white/80 text-[13px] mt-0.5">{toast.message}</p>
+            </div>
+            <button onClick={() => setToast({ ...toast, show: false })} className="ml-auto text-white/40 hover:text-white transition-colors">
+              <X size={18} />
+            </button>
           </div>
-          <div><h4 className="text-[14px] font-bold text-gray-800">{toast.type === "success" ? "Thành công" : "Lỗi"}</h4><p className="text-[12px] text-gray-600">{toast.message}</p></div>
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { 
   Search, CheckCircle2, XCircle, Clock, 
   ShieldCheck, Receipt, ArrowRight,
-  AlertCircle, Minus, Plus
+  AlertCircle, Minus, Plus, Sparkles, X
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 
@@ -42,6 +42,12 @@ export function Returns() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!canApprove && activeTab === "manager") setActiveTab("pos");
@@ -149,24 +155,29 @@ export function Returns() {
     <div className="p-8 min-h-screen relative">
       <div className="flex items-center gap-3 mb-8">
         <div>
-          <p className="text-[#9d6b7a] text-[13px] font-medium uppercase tracking-widest">After-Sales</p>
-          <h1 className="text-[#3d1a2e] text-[26px] font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>Quản Lý Đổi Trả</h1>
+          <div className="flex items-center gap-2 mb-1">
+          <Sparkles size={16} color="#D4AF37" />
+          <p className="text-[#9d6b7a] text-[13px] font-medium uppercase tracking-widest">
+            {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          </p>
+        </div>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>Quản Lý Đổi Trả</h1>
         </div>
       </div>
 
       <div className="flex gap-2 mb-8">
         <button 
           onClick={() => setActiveTab("pos")}
-          className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[14px] font-bold transition-all ${activeTab === "pos" ? "bg-gradient-to-r from-[#D4AF37] to-[#C9A94E] text-white shadow-lg shadow-[#D4AF37]/30" : "bg-white text-[#6b4153] hover:bg-gray-50 border border-white"}`}
+          className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[14px] font-bold transition-all hover:scale-105 active:scale-95 ${activeTab === "pos" ? "bg-gradient-to-r from-[#D4AF37] to-[#C9A94E] text-white shadow-lg shadow-[#D4AF37]/30" : "bg-white text-[#6b4153] hover:bg-gray-50 border border-white"}`}
         >
-          <Receipt size={16} /> Tạo Phiếu Trả Hàng (POS)
+          <Receipt size={18} /> Tạo Phiếu Trả Hàng (POS)
         </button>
         {canApprove && (
           <button 
             onClick={() => setActiveTab("manager")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[14px] font-bold transition-all ${activeTab === "manager" ? "bg-gradient-to-r from-[#D4AF37] to-[#C9A94E] text-white shadow-lg shadow-[#D4AF37]/30" : "bg-white text-[#6b4153] hover:bg-gray-50 border border-white"}`}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[14px] font-bold transition-all hover:scale-105 active:scale-95 ${activeTab === "manager" ? "bg-gradient-to-r from-[#D4AF37] to-[#C9A94E] text-white shadow-lg shadow-[#D4AF37]/30" : "bg-white text-[#6b4153] hover:bg-gray-50 border border-white"}`}
           >
-            <ShieldCheck size={16} /> Duyệt Yêu Cầu (Manager)
+            <ShieldCheck size={18} /> Duyệt Yêu Cầu
             {requests.filter(r => r.status === "Chờ duyệt").length > 0 && (
               <span className="ml-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full ring-2 ring-white animate-pulse">
                 {requests.filter(r => r.status === "Chờ duyệt").length}
@@ -188,7 +199,7 @@ export function Returns() {
                   placeholder="Mã hóa đơn (Ví dụ: INV-1)..." 
                   className="flex-1 p-4 rounded-2xl border border-[#D4AF37]/20 outline-none focus:ring-2 ring-[#D4AF37]/10 bg-[#fdfbf7] text-[14px]" 
                 />
-                <button onClick={handleSearch} disabled={isSearching} className="px-8 py-4 rounded-2xl bg-[#3d1a2e] text-white font-bold text-[14px] transition-transform active:scale-95 disabled:opacity-70">
+                <button onClick={handleSearch} disabled={isSearching} className="px-8 py-4 rounded-2xl bg-[#3d1a2e] text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 disabled:bg-gray-300 disabled:scale-100">
                   {isSearching ? "Đang tìm..." : "Kiểm Tra"}
                 </button>
               </div>
@@ -325,14 +336,23 @@ export function Returns() {
         )}
       </div>
 
+      {/* TOAST NOTIFICATION (Standardized) */}
       {toast && (
-        <div className={`fixed bottom-10 right-10 z-[100] flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-5 border ${toast.type === 'success' ? 'bg-[#f0fdf4] border-green-200' : 'bg-[#fef2f2] border-red-200'}`}>
-          <div className="shrink-0">{toast.type === 'success' ? <CheckCircle2 color="#16a34a" size={24} /> : <AlertCircle color="#dc2626" size={24} />}</div>
-          <div>
-            <h4 className={`font-bold text-[14px] ${toast.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>{toast.type === 'success' ? 'Thành công' : 'Thông báo'}</h4>
-            <p className={`text-[12px] mt-0.5 ${toast.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{toast.message}</p>
+        <div className="fixed top-24 right-8 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="bg-[#3d1a2e] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[320px] border border-white/10">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              toast.type === "success" ? "bg-emerald-500/20" : "bg-rose-500/20"
+            }`}>
+              {toast.type === "error" ? <AlertCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
+            </div>
+            <div>
+              <p className="font-bold text-[15px]">{toast.type === "success" ? "Thành công" : "Lỗi hệ thống"}</p>
+              <p className="text-white/80 text-[13px] mt-0.5">{toast.message}</p>
+            </div>
+            <button onClick={() => setToast(null)} className="ml-auto text-white/40 hover:text-white transition-colors">
+              <X size={18} />
+            </button>
           </div>
-          <button onClick={() => setToast(null)} className="ml-4 p-1 rounded-full hover:bg-black/5"><XCircle size={18} /></button>
         </div>
       )}
     </div>

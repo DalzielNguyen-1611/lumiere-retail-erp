@@ -267,7 +267,7 @@ export function Sidebar() {
             <span
               style={{ color: "rgba(255,255,255,0.45)", fontSize: "12.5px", fontWeight: 400 }}
             >
-              Sign Out
+              Đăng xuất
             </span>
           </button>
         </div>

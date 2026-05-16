@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Plus, AlertTriangle, Package, X, ShoppingCart, Trash2, Minus } from "lucide-react";
+import { Search, Plus, AlertTriangle, Package, X, ShoppingCart, Trash2, Minus, Sparkles, AlertCircle } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 
 const glassCard = {
@@ -29,11 +29,17 @@ export function Inventory() {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
   
   // States cho tính năng cũ
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
+  const [toast, setToast] = useState<{show: boolean, message: string, type: "success" | "error"}>({show: false, message: "", type: "success"});
   const [newProduct, setNewProduct] = useState({
     name: "", sku: "", category: "Sữa rửa mặt", price: "", stock: "", isSellable: true
   });
@@ -96,8 +102,8 @@ export function Inventory() {
     const existing = refillCart.find(item => item.id === product.id);
     if (!existing) {
       setRefillCart([...refillCart, { ...product, requestQty: 10 }]); // Mặc định xin nhập 10 cái
-      setToastMessage(`Đã thêm ${product.name} vào danh sách chờ Refill`);
-      setTimeout(() => setToastMessage(""), 3000);
+      setToast({ show: true, message: `Đã thêm ${product.name} vào danh sách chờ Refill`, type: "success" });
+      setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
     } else {
       setIsRefillSidebarOpen(true); // Nếu có rồi thì mở khay ra luôn
     }
@@ -127,8 +133,8 @@ export function Inventory() {
     setIsRefillSidebarOpen(false);
     setRefillCart([]);
     setRefillNote("");
-    setToastMessage("Đã gửi Yêu cầu nhập kho thành công tới phòng Kế toán!");
-    setTimeout(() => setToastMessage(""), 4000);
+    setToast({ show: true, message: "Đã gửi Yêu cầu nhập kho thành công tới phòng Kế toán!", type: "success" });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
   };
 
   const stats = useMemo(() => {
@@ -139,10 +145,10 @@ export function Inventory() {
       else if (p.status === "Out of Stock") outOfStock++;
     });
     return [
-      { label: "Total Products", value: products.length.toString(), icon: Package, color: "#D4AF37" },
-      { label: "In Stock", value: inStock.toString(), icon: Package, color: "#4ade80" },
-      { label: "Low Stock", value: lowStock.toString(), icon: AlertTriangle, color: "#D4AF37" },
-      { label: "Out of Stock", value: outOfStock.toString(), icon: AlertTriangle, color: "#f43f5e" },
+      { label: "Tổng mặt hàng", value: products.length.toString(), icon: Package, color: "#D4AF37" },
+      { label: "Đang kinh doanh", value: inStock.toString(), icon: Package, color: "#4ade80" },
+      { label: "Sắp hết hàng", value: lowStock.toString(), icon: AlertTriangle, color: "#D4AF37" },
+      { label: "Hết hàng", value: outOfStock.toString(), icon: AlertTriangle, color: "#f43f5e" },
     ];
   }, [products]);
 
@@ -159,21 +165,28 @@ export function Inventory() {
       {/* --- HEADER --- */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500, letterSpacing: "0.05em" }}>Product Management</p>
-          <h1 style={{ color: "#3d1a2e", fontSize: "26px", fontWeight: 700, marginTop: 2 }}>Inventory</h1>
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles size={16} color="#D4AF37" />
+            <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            </p>
+          </div>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+            Kho Hàng & Sản Phẩm
+          </h1>
         </div>
         
         <div className="flex items-center gap-4">
           {/* NÚT MỞ GIỎ HÀNG REFILL */}
           <button
             onClick={() => setIsRefillSidebarOpen(true)}
-            className="relative flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all hover:scale-105 cursor-pointer"
-            style={{ background: "white", border: "1px solid rgba(212,175,55,0.4)", color: "#92740d", fontSize: "13px", fontWeight: 600, boxShadow: "0 6px 20px rgba(61,26,46,0.05)" }}
+            className="relative flex items-center gap-2 px-6 py-3 rounded-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md"
+            style={{ background: "white", border: "1px solid rgba(212,175,55,0.4)", color: "#92740d", fontSize: "14px", fontWeight: 700 }}
           >
-            <ShoppingCart size={16} /> 
-            Refill Cart
+            <ShoppingCart size={18} /> 
+            Giỏ hàng nhập
             {refillCart.length > 0 && (
-              <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white" style={{ background: "#dc2626" }}>
+              <span className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-black text-white shadow-lg" style={{ background: "#dc2626" }}>
                 {refillCart.length}
               </span>
             )}
@@ -182,10 +195,10 @@ export function Inventory() {
           {/* NÚT THÊM SẢN PHẨM (Tạm giữ theo ý bạn) */}
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all hover:scale-105 cursor-pointer"
-            style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)", boxShadow: "0 6px 20px rgba(212,175,55,0.4)", color: "white", fontSize: "13px", fontWeight: 600 }}
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer"
+            style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}
           >
-            <Plus size={16} /> Add Product
+            <Plus size={18} /> Thêm sản phẩm
           </button>
         </div>
       </div>
@@ -211,7 +224,7 @@ export function Inventory() {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.6)", border: "1px solid rgba(212,175,55,0.2)" }}>
               <Search size={15} color="#9d6b7a" />
-              <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search inventory..." style={{ border: "none", outline: "none", background: "transparent", color: "#3d1a2e", fontSize: "13px", width: "220px" }} />
+              <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Tìm kiếm kho..." style={{ border: "none", outline: "none", background: "transparent", color: "#3d1a2e", fontSize: "13px", width: "220px" }} />
             </div>
           </div>
           
@@ -219,7 +232,7 @@ export function Inventory() {
             <table className="w-full min-w-[800px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
-                  {["Product Info", "Category", "Price", "Stock", "Status", ""].map((h, index) => (
+                  {["Sản phẩm", "Danh mục", "Giá bán", "Tồn kho", "Trạng thái", ""].map((h, index) => (
                     <th key={index} style={{ color: "#9d6b7a", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", padding: "10px 12px", textAlign: h === "" ? "right" : "left" }}>
                       {h.toUpperCase()}
                     </th>
@@ -280,7 +293,7 @@ export function Inventory() {
                               boxShadow: (p.stock <= 0 && !isInCart) ? "0 4px 10px rgba(220,38,38,0.2)" : (isInCart ? "0 4px 10px rgba(212,175,55,0.3)" : "none")
                             }}
                           >
-                            {isInCart ? "✓ In List" : "+ Refill"}
+                            {isInCart ? "✓ Đã chọn" : "+ Nhập hàng"}
                           </button>
                         </td>
                       </tr>
@@ -311,8 +324,8 @@ export function Inventory() {
                   <ShoppingCart size={18} color="#D4AF37" />
                 </div>
                 <div>
-                  <h2 style={{ color: "#3d1a2e", fontSize: "16px", fontWeight: 700 }}>Refill Request Cart</h2>
-                  <p style={{ color: "#9d6b7a", fontSize: "12px" }}>{refillCart.length} items selected</p>
+                  <h2 style={{ color: "#3d1a2e", fontSize: "16px", fontWeight: 700 }}>Giỏ hàng nhập sản phẩm</h2>
+                  <p style={{ color: "#9d6b7a", fontSize: "12px" }}>{refillCart.length} sản phẩm đã chọn</p>
                 </div>
               </div>
               <button onClick={() => setIsRefillSidebarOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors">
@@ -396,11 +409,11 @@ export function Inventory() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ background: "rgba(61,26,46,0.6)", backdropFilter: "blur(6px)" }}>
           <div className="p-8 rounded-3xl w-full max-w-md relative" style={{ background: "white", boxShadow: "0 24px 60px rgba(61,26,46,0.2)" }}>
             <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 cursor-pointer" style={{ color: "#9d6b7a" }}><X size={20} /></button>
-            <h2 style={{ color: "#3d1a2e", fontSize: "20px", fontWeight: 700, marginBottom: 20 }}>Add New Product</h2>
+            <h2 style={{ color: "#3d1a2e", fontSize: "20px", fontWeight: 700, marginBottom: 20 }}>Thêm sản phẩm mới</h2>
             
             <div className="space-y-4">
               <div>
-                <label style={{ color: "#9d6b7a", fontSize: "12px", fontWeight: 600 }}>Product Name *</label>
+                <label style={{ color: "#9d6b7a", fontSize: "12px", fontWeight: 600 }}>Tên sản phẩm *</label>
                 <input value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} className="w-full mt-1 p-3 rounded-xl outline-none" style={{ background: "rgba(253,242,248,0.5)", border: "1px solid rgba(212,175,55,0.2)", color: "#3d1a2e", fontSize: "13px" }} placeholder="Enter product name..." />
               </div>
               
@@ -432,7 +445,7 @@ export function Inventory() {
                   <input type="number" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} className="w-full mt-1 p-3 rounded-xl outline-none" style={{ background: "rgba(253,242,248,0.5)", border: "1px solid rgba(212,175,55,0.2)", color: "#3d1a2e", fontSize: "13px" }} placeholder="0" />
                 </div>
                 <div className="flex-1">
-                  <label style={{ color: "#9d6b7a", fontSize: "12px", fontWeight: 600 }}>Initial Stock</label>
+                  <label style={{ color: "#9d6b7a", fontSize: "12px", fontWeight: 600 }}>Số lượng tồn đầu</label>
                   <input type="number" value={newProduct.stock} onChange={e => setNewProduct({...newProduct, stock: e.target.value})} className="w-full mt-1 p-3 rounded-xl outline-none" style={{ background: "rgba(253,242,248,0.5)", border: "1px solid rgba(212,175,55,0.2)", color: "#3d1a2e", fontSize: "13px" }} placeholder="0" />
                 </div>
               </div>
@@ -462,7 +475,7 @@ export function Inventory() {
                 className="w-full mt-4 py-3.5 rounded-xl font-bold transition-all cursor-pointer"
                 style={{ background: isSubmitting ? "#ccc" : "linear-gradient(135deg, #D4AF37, #C9A94E)", color: "white", boxShadow: isSubmitting ? "none" : "0 8px 24px rgba(212,175,55,0.4)" }}
               >
-                {isSubmitting ? "Saving..." : "Save Product"}
+                {isSubmitting ? "Đang lưu..." : "Lưu sản phẩm"}
               </button>
             </div>
           </div>
@@ -470,23 +483,23 @@ export function Inventory() {
       )}
 
       {/* --- CUSTOM TOAST NOTIFICATION --- */}
-      {toastMessage && (
-        <div 
-          className="fixed bottom-10 right-10 z-[100] flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl transition-all duration-300"
-          style={{ background: "#3d1a2e", border: "1px solid rgba(212,175,55,0.4)" }}
-        >
-          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(212,175,55,0.2)" }}>
-            <Package size={20} color="#D4AF37" />
+      {/* TOAST NOTIFICATION (Standardized) */}
+      {toast.show && (
+        <div className="fixed top-24 right-8 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="bg-[#3d1a2e] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[320px] border border-white/10">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              toast.type === "success" ? "bg-emerald-500/20" : "bg-rose-500/20"
+            }`}>
+              {toast.type === "error" ? <AlertCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
+            </div>
+            <div>
+              <p className="font-bold text-[15px]">{toast.type === "success" ? "Thành công" : "Lỗi hệ thống"}</p>
+              <p className="text-white/80 text-[13px] mt-0.5">{toast.message}</p>
+            </div>
+            <button onClick={() => setToast({ ...toast, show: false })} className="ml-auto text-white/40 hover:text-white transition-colors">
+              <X size={18} />
+            </button>
           </div>
-          <div>
-            <h4 style={{ color: "#D4AF37", fontSize: "14px", fontWeight: 700 }}>Thông báo hệ thống</h4>
-            <p style={{ color: "rgba(255,255,255,0.9)", fontSize: "12px", marginTop: 2, maxWidth: "250px" }} className="line-clamp-2">
-              {toastMessage}
-            </p>
-          </div>
-          <button onClick={() => setToastMessage("")} style={{ color: "#9d6b7a", marginLeft: 10 }} className="hover:text-white transition-colors cursor-pointer">
-            <X size={18} />
-          </button>
         </div>
       )}
 

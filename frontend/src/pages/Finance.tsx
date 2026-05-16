@@ -173,9 +173,11 @@ export function Finance() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} color="#D4AF37" />
-            <p className="text-[#9d6b7a] text-[13px] font-medium uppercase tracking-widest">{dateString} • {timeString}</p>
+            <p className="text-[#9d6b7a] text-[13px] font-medium uppercase tracking-widest">
+              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            </p>
           </div>
-          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>Tài Chính & Kế Toán</h1>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>Tài Chính & Kế Toán</h1>
         </div>
         
         <div className="flex gap-1 p-1 bg-white/50 rounded-2xl border border-white shadow-inner">
@@ -442,7 +444,7 @@ export function Finance() {
 
             <div className="flex gap-3">
               <button onClick={() => setPaymentModal(null)} className="flex-1 py-3.5 rounded-xl font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 text-[14px]">Hủy bỏ</button>
-              <button onClick={confirmPayment} className="flex-1 py-3.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>
+              <button onClick={confirmPayment} className="flex-1 py-4 rounded-2xl font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>
                 Xác nhận chi
               </button>
             </div>
@@ -450,19 +452,23 @@ export function Finance() {
         </div>
       )}
 
-      {/* TOAST CUSTOM (Đã update giao diện) */}
+      {/* TOAST NOTIFICATION (Standardized) */}
       {toast && (
-        <div className={`fixed bottom-10 right-10 z-[120] flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl transition-all duration-300 animate-in slide-in-from-bottom-5 border ${toast.type === 'success' ? 'bg-[#f0fdf4] border-green-200' : toast.type === 'error' ? 'bg-[#fef2f2] border-red-200' : 'bg-[#eff6ff] border-blue-200'}`}>
-          <div className="shrink-0">
-            {toast.type === 'success' ? <CheckCircle2 color="#16a34a" size={24} /> : toast.type === 'error' ? <AlertCircle color="#dc2626" size={24} /> : <Info color="#2563eb" size={24} />}
+        <div className="fixed top-24 right-8 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="bg-[#3d1a2e] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[320px] border border-white/10">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              toast.type === "success" ? "bg-emerald-500/20" : toast.type === "error" ? "bg-rose-500/20" : "bg-amber-500/20"
+            }`}>
+              {toast.type === "error" ? <AlertCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
+            </div>
+            <div>
+              <p className="font-bold text-[15px]">{toast.type === "success" ? "Thành công" : toast.type === "error" ? "Lỗi hệ thống" : "Thông báo"}</p>
+              <p className="text-white/80 text-[13px] mt-0.5">{toast.message}</p>
+            </div>
+            <button onClick={() => setToast(null)} className="ml-auto text-white/40 hover:text-white transition-colors">
+              <X size={18} />
+            </button>
           </div>
-          <div>
-            <h4 className={`font-bold text-[14px] ${toast.type === 'success' ? 'text-green-800' : toast.type === 'error' ? 'text-red-800' : 'text-blue-800'}`}>
-              {toast.type === 'success' ? 'Thành công' : toast.type === 'error' ? 'Lỗi hệ thống' : 'Thông báo'}
-            </h4>
-            <p className={`text-[13px] mt-0.5 font-medium ${toast.type === 'success' ? 'text-green-600' : toast.type === 'error' ? 'text-red-600' : 'text-blue-600'}`}>{toast.message}</p>
-          </div>
-          <button onClick={() => setToast(null)} className="ml-4 p-1 rounded-full hover:bg-black/5 transition-colors"><XCircle size={18} /></button>
         </div>
       )}
     </div>
@@ -485,8 +491,12 @@ function StatCard({ label, value, icon: Icon, color }: any) {
 
 function TabButton({ active, onClick, icon: Icon, label }: any) {
   return (
-    <button onClick={onClick} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all ${active ? "text-white shadow-md shadow-amber-500/20" : "text-[#6b4153] hover:bg-white"}`} style={{ background: active ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "transparent" }}>
-      <Icon size={16} /> <span className="font-bold text-[13px]">{label}</span>
+    <button 
+      onClick={onClick} 
+      className={`flex items-center gap-2 px-6 py-3 rounded-2xl transition-all shadow-sm hover:shadow-md active:scale-95 ${active ? "text-white shadow-amber-500/20" : "text-[#6b4153] hover:bg-white"}`} 
+      style={{ background: active ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "transparent" }}
+    >
+      <Icon size={18} /> <span className="font-bold text-[14px]">{label}</span>
     </button>
   );
 }

@@ -1,6 +1,6 @@
 // File: src/pages/Logistics.tsx
 import React, { useState, useEffect } from "react";
-import { ArrowRight, CheckCircle2, Plus, Clock, PackageCheck, XCircle, FileText, Search, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, Plus, Clock, PackageCheck, XCircle, FileText, Search, X, Sparkles } from "lucide-react";
 
 const glassCard = { background: "rgba(255,255,255,0.72)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(61,26,46,0.06)", borderRadius: "20px" };
 const BACKEND_URL = "http://localhost:5000";
@@ -26,6 +26,12 @@ export function Logistics() {
     setToast({show: true, message, type});
     setTimeout(() => setToast(prev => ({...prev, show: false})), 3000);
   };
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchReceipts = async () => {
     setIsLoading(true);
@@ -123,15 +129,20 @@ export function Logistics() {
     <div className="p-8 min-h-screen relative">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500 }}>Inventory & Logistics</p>
-          <h1 style={{ color: "#3d1a2e", fontSize: "26px", fontWeight: 700, fontFamily: "'Playfair Display', serif" }}>Quản Lý Phiếu Kho</h1>
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles size={16} color="#D4AF37" />
+            <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            </p>
+          </div>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>Quản Lý Phiếu Kho</h1>
         </div>
         <button 
           onClick={() => setIsTransferModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-[13px] transition-transform hover:scale-105 shadow-lg shadow-amber-500/20" 
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer" 
           style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}
         >
-          <Plus size={16}/> Tạo Phiếu Xuất/Chuyển Kho
+          <Plus size={18}/> Tạo Phiếu Xuất/Chuyển Kho
         </button>
       </div>
 
@@ -222,7 +233,7 @@ export function Logistics() {
               <div className="w-20 h-20 bg-emerald-50 border-4 border-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-5">
                 <PackageCheck size={40} />
               </div>
-              <h2 className="text-2xl font-bold mb-3 text-[#3d1a2e]" style={{ fontFamily: "'Playfair Display', serif" }}>Xác nhận Nhập Kho</h2>
+              <h2 className="text-2xl font-bold mb-3 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>Xác nhận Nhập Kho</h2>
               <p className="text-[#9d6b7a] text-[14px] mb-8 leading-relaxed">
                 Bạn có chắc chắn hàng đã giao đủ và muốn tiến hành nhập kho cho phiếu <br/><strong className="text-[#D4AF37] text-[16px]">{confirmModal.ticketCode}</strong> không?<br/> Số lượng tồn kho sẽ được cộng tự động.
               </p>
@@ -247,7 +258,7 @@ export function Logistics() {
             <button onClick={() => setIsTransferModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
               <X size={24} />
             </button>
-            <h2 className="text-2xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "'Playfair Display', serif" }}>Tạo Phiếu Chuyển Kho</h2>
+            <h2 className="text-2xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>Tạo Phiếu Chuyển Kho</h2>
             
             <form onSubmit={handleCreateTransfer} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -311,13 +322,23 @@ export function Logistics() {
         </div>
       )}
 
-      {/* TOAST THÔNG BÁO */}
+      {/* TOAST NOTIFICATION (Standardized) */}
       {toast.show && (
-        <div className="fixed bottom-10 right-10 z-[120] flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl bg-white border-l-4 animate-in slide-in-from-right-8" style={{ borderLeftColor: toast.type === "success" ? "#10b981" : "#ef4444" }}>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: toast.type === "success" ? "#d1fae5" : "#fee2e2" }}>
-            {toast.type === "success" ? <CheckCircle2 size={18} color="#10b981" /> : <XCircle size={18} color="#ef4444" />}
+        <div className="fixed top-24 right-8 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="bg-[#3d1a2e] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[320px] border border-white/10">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              toast.type === "success" ? "bg-emerald-500/20" : "bg-rose-500/20"
+            }`}>
+              {toast.type === "error" ? <AlertCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
+            </div>
+            <div>
+              <p className="font-bold text-[15px]">{toast.type === "success" ? "Thành công" : "Lỗi hệ thống"}</p>
+              <p className="text-white/80 text-[13px] mt-0.5">{toast.message}</p>
+            </div>
+            <button onClick={() => setToast({ ...toast, show: false })} className="ml-auto text-white/40 hover:text-white transition-colors">
+              <X size={18} />
+            </button>
           </div>
-          <div><h4 className="text-[14px] font-bold text-gray-800">{toast.type === "success" ? "Thành công" : "Lỗi"}</h4><p className="text-[12px] text-gray-600">{toast.message}</p></div>
         </div>
       )}
     </div>

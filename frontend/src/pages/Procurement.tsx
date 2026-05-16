@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Building, Truck, Plus, X, CheckCircle2, XCircle, Mail, MapPin, Phone, Receipt, ChevronDown, ChevronRight, Search, Trash2, Clock } from "lucide-react";
+import { Building, Truck, Plus, X, CheckCircle2, XCircle, Mail, MapPin, Phone, Receipt, ChevronDown, ChevronRight, Search, Trash2, Clock, Sparkles } from "lucide-react";
 // Đảm bảo đường dẫn này khớp với file AuthContext trong source code của bạn:
 import { useAuth } from "../context/AuthContext"; 
 
@@ -41,6 +41,12 @@ export function Procurement() {
     setToast({show: true, message, type});
     setTimeout(() => setToast(prev => ({...prev, show: false})), 3000);
   };
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -154,27 +160,52 @@ export function Procurement() {
     <div className="p-8 min-h-screen relative">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500 }}>Supply Chain</p>
-          <h1 style={{ color: "#3d1a2e", fontSize: "26px", fontWeight: 700, fontFamily: "'Playfair Display', serif" }}>Mua Hàng & Cung Ứng</h1>
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles size={16} color="#D4AF37" />
+            <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            </p>
+          </div>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>Mua Hàng & Cung Ứng</h1>
         </div>
         <div className="flex gap-3">
           {activeTab === "suppliers" && (
-            <button onClick={() => setIsAddSupplierOpen(true)} className="px-5 py-2.5 rounded-xl text-white font-bold text-[13px] flex items-center gap-2 transition-transform hover:scale-105" style={{ background: "linear-gradient(135deg, #10b981, #059669)", boxShadow: "0 4px 14px rgba(16,185,129,0.3)" }}>
-              <Building size={16} /> Thêm Nhà Cung Cấp
+            <button onClick={() => setIsAddSupplierOpen(true)} className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>
+              <Building size={18} /> Thêm Nhà Cung Cấp
             </button>
           )}
-          <button onClick={() => setIsAddPOOpen(true)} className="px-5 py-2.5 rounded-xl text-white font-bold text-[13px] flex items-center gap-2 transition-transform hover:scale-105" style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)", boxShadow: "0 4px 14px rgba(212,175,55,0.3)" }}>
-            <Plus size={16} /> Tạo Đơn Nhập Hàng (PO)
+          <button onClick={() => setIsAddPOOpen(true)} className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer" style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}>
+            <Plus size={18} /> Tạo Đơn Nhập Hàng (PO)
           </button>
         </div>
       </div>
 
       <div className="flex gap-2 mb-6">
-        <button onClick={() => setActiveTab("orders")} className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-[13px] font-bold transition-all" style={{ background: activeTab === "orders" ? "#D4AF37" : "#fff", color: activeTab === "orders" ? "#fff" : "#3d1a2e", border: "1px solid", borderColor: activeTab === "orders" ? "transparent" : "rgba(255,255,255,0.9)" }}>
-          <Truck size={16}/> Đơn Nhập Hàng (PO)
+        <button 
+          onClick={() => setActiveTab("orders")} 
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl text-[14px] font-bold transition-all shadow-sm hover:shadow-md active:scale-95" 
+          style={{ 
+            background: activeTab === "orders" ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "rgba(255,255,255,0.7)", 
+            color: activeTab === "orders" ? "#fff" : "#3d1a2e", 
+            border: "1px solid", 
+            borderColor: activeTab === "orders" ? "transparent" : "rgba(255,255,255,0.9)",
+            boxShadow: activeTab === "orders" ? "0 8px 24px rgba(212,175,55,0.25)" : "none"
+          }}
+        >
+          <Truck size={18}/> Đơn Nhập Hàng (PO)
         </button>
-        <button onClick={() => setActiveTab("suppliers")} className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-[13px] font-bold transition-all" style={{ background: activeTab === "suppliers" ? "#D4AF37" : "#fff", color: activeTab === "suppliers" ? "#fff" : "#3d1a2e", border: "1px solid", borderColor: activeTab === "suppliers" ? "transparent" : "rgba(255,255,255,0.9)" }}>
-          <Building size={16}/> Quản Lý Nhà Cung Cấp
+        <button 
+          onClick={() => setActiveTab("suppliers")} 
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl text-[14px] font-bold transition-all shadow-sm hover:shadow-md active:scale-95" 
+          style={{ 
+            background: activeTab === "suppliers" ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "rgba(255,255,255,0.7)", 
+            color: activeTab === "suppliers" ? "#fff" : "#3d1a2e", 
+            border: "1px solid", 
+            borderColor: activeTab === "suppliers" ? "transparent" : "rgba(255,255,255,0.9)",
+            boxShadow: activeTab === "suppliers" ? "0 8px 24px rgba(212,175,55,0.25)" : "none"
+          }}
+        >
+          <Building size={18}/> Quản Lý Nhà Cung Cấp
         </button>
       </div>
 
@@ -287,7 +318,7 @@ export function Procurement() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl p-6 w-full max-w-6xl shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 flex flex-col h-[90vh]">
             <button onClick={() => setIsAddPOOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 z-10"><X size={24} /></button>
-            <h2 className="text-2xl font-bold mb-6 text-[#3d1a2e] px-2" style={{ fontFamily: "'Playfair Display', serif" }}>Lập Đơn Nhập Hàng (PO)</h2>
+            <h2 className="text-2xl font-bold mb-6 text-[#3d1a2e] px-2" style={{ fontFamily: "var(--font-heading)" }}>Lập Đơn Nhập Hàng (PO)</h2>
             
             <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
@@ -439,13 +470,23 @@ export function Procurement() {
         </div>
       )}
 
-      {/* TOAST */}
+      {/* TOAST NOTIFICATION (Standardized) */}
       {toast.show && (
-        <div className="fixed bottom-10 right-10 z-[120] flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl bg-white border-l-4 animate-in slide-in-from-right-8" style={{ borderLeftColor: toast.type === "success" ? "#10b981" : "#ef4444" }}>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: toast.type === "success" ? "#d1fae5" : "#fee2e2" }}>
-            {toast.type === "success" ? <CheckCircle2 size={18} color="#10b981" /> : <XCircle size={18} color="#ef4444" />}
+        <div className="fixed top-24 right-8 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="bg-[#3d1a2e] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[320px] border border-white/10">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              toast.type === "success" ? "bg-emerald-500/20" : "bg-rose-500/20"
+            }`}>
+              {toast.type === "error" ? <AlertCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
+            </div>
+            <div>
+              <p className="font-bold text-[15px]">{toast.type === "success" ? "Thành công" : "Lỗi hệ thống"}</p>
+              <p className="text-white/80 text-[13px] mt-0.5">{toast.message}</p>
+            </div>
+            <button onClick={() => setToast({ ...toast, show: false })} className="ml-auto text-white/40 hover:text-white transition-colors">
+              <X size={18} />
+            </button>
           </div>
-          <div><h4 className="text-[14px] font-bold text-gray-800">{toast.type === "success" ? "Thành công" : "Lỗi"}</h4><p className="text-[12px] text-gray-600">{toast.message}</p></div>
         </div>
       )}
     </div>

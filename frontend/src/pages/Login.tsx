@@ -323,7 +323,7 @@ export function Login() {
                 >
                   {rememberMe && <span style={{ color: "white", fontSize: "11px" }}>✓</span>}
                 </button>
-                <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px" }}>Remember me on this device</span>
+                <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px" }}>Ghi nhớ đăng nhập trên thiết bị này</span>
               </div>
 
               {/* Sign In Button */}
@@ -343,11 +343,11 @@ export function Login() {
                     <div
                       className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin"
                     />
-                    <span style={{ color: "white", fontSize: "14px", fontWeight: 700 }}>Signing in…</span>
+                    <span style={{ color: "white", fontSize: "14px", fontWeight: 700 }}>Đang đăng nhập…</span>
                   </>
                 ) : (
                   <>
-                    <span style={{ color: "white", fontSize: "14px", fontWeight: 700 }}>Sign In to Lumière</span>
+                    <span style={{ color: "white", fontSize: "14px", fontWeight: 700 }}>Đăng nhập Lumière</span>
                     <ArrowRight size={18} color="white" />
                   </>
                 )}
@@ -359,7 +359,7 @@ export function Login() {
 
           {/* Footer */}
           <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "11px", textAlign: "center", marginTop: 20 }}>
-            © 2026 Lumière Beauty Studio. All rights reserved.
+            © 2026 Lumière Beauty Studio. Đã đăng ký bản quyền.
           </p>
         </div>
       </div>
@@ -385,10 +385,8 @@ export function Login() {
             >
               <Lock size={24} color="#D4AF37" />
             </div>
-            <h3 style={{ color: "white", fontSize: "18px", fontWeight: 700, marginBottom: 8 }}>Reset Password</h3>
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px", marginBottom: 20 }}>
-              Contact your system administrator to reset your password or use a demo account below.
-            </p>
+            <h3 style={{ color: "white", fontSize: "18px", fontWeight: 700, marginBottom: 8 }}>Đặt lại mật khẩu</h3>
+              Vui lòng liên hệ với quản trị viên hệ thống để đặt lại mật khẩu của bạn.
             <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "11px", marginBottom: 20 }}>
               📧 admin@lumiere.vn
             </p>
@@ -397,7 +395,7 @@ export function Login() {
               className="w-full py-3 rounded-xl"
               style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)", color: "white", fontWeight: 700, fontSize: "13px" }}
             >
-              Close
+              Đóng
             </button>
           </div>
         </div>

@@ -20,7 +20,8 @@ import hrRoutes from './modules/HR/hr.routes';
 import procurementRoutes from './modules/Procurement/procurement.routes';
 import logisticsRoutes from './modules/Tranfer/logistics.routes';
 import tmRoutes from './modules/TimeManagement/tm.routes';
-import dashboardRoutes from './modules/Dashboard/dashboard.routes'; // Thêm ở đầu file
+import dashboardRoutes from './modules/Dashboard/dashboard.routes';
+import storeRoutes from './modules/Store/store.routes';
 
 const app = express();
 app.use(cors());
@@ -50,7 +51,8 @@ app.use('/api/hr', hrRoutes);
 app.use('/api/procurement', procurementRoutes);
 app.use('/api/logistics', logisticsRoutes);
 app.use('/api/tm', tmRoutes);
-app.use('/api/dashboard', dashboardRoutes); // Thêm route Dashboard vào đây
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/stores', storeRoutes);
 
 // Route mặc định kiểm tra server
 app.get('/', (req, res) => {

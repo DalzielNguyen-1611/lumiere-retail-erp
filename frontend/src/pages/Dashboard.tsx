@@ -89,13 +89,12 @@ export function Dashboard() {
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} color="#D4AF37" />
             <p className="text-[#9d6b7a] text-[13px] font-medium uppercase tracking-widest">
-              {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
-          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>
             {greeting}, {userName}!
           </h1>
-          <p className="text-[#6b4153] text-[14px] mt-1">Dưới đây là tình hình kinh doanh của toàn hệ thống theo thời gian thực</p>
         </div>
       </div>
 
