@@ -18,6 +18,11 @@ const glassCard = {
 
 const BACKEND_URL = "http://localhost:5000";
 
+const formatTimeWithSeconds = (date: Date) => {
+  const pad = (num: number) => num.toString().padStart(2, "0");
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
+
 export function TimeManagement() {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<"attendance" | "leave">("attendance");
@@ -159,90 +164,182 @@ export function TimeManagement() {
         
         {/* ======================= TAB 1: CHẤM CÔNG ======================= */}
         {activeTab === "attendance" && (
-          <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             
-            <div style={glassCard} className="p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4 w-full md:w-auto text-left">
-                <div className="w-14 h-14 rounded-full bg-[#D4AF37]/10 flex items-center justify-center shadow-inner shrink-0">
-                  <Clock size={28} color="#D4AF37" />
+            {/* 70% bên trái: Lịch sử & Thống kê */}
+            <div className="lg:col-span-2 space-y-6">
+              
+              {/* Khối Thẻ Thống Kê nhanh */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div style={glassCard} className="p-5 text-center flex flex-col justify-center items-center">
+                  <p className="text-[#9d6b7a] text-[11px] font-bold uppercase tracking-wider mb-1">
+                    {language === 'vi' ? 'Số ca hoàn thành' : 'Shifts Completed'}
+                  </p>
+                  <p className="text-2xl font-black text-[#3d1a2e]">
+                    {history.filter(h => h.status !== 'Đang làm việc').length} ca
+                  </p>
                 </div>
-                <div>
-                  <h2 className="text-[#3d1a2e] text-2xl lg:text-3xl font-black mb-0.5 tracking-tight">
-                    {currentTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US')}
-                  </h2>
-                  <p className="text-[#9d6b7a] text-xs font-bold uppercase tracking-wider">
-                    {currentTime.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                <div style={glassCard} className="p-5 text-center flex flex-col justify-center items-center">
+                  <p className="text-[#9d6b7a] text-[11px] font-bold uppercase tracking-wider mb-1">
+                    {language === 'vi' ? 'Tổng giờ làm việc' : 'Total Work Hours'}
+                  </p>
+                  <p className="text-2xl font-black text-[#D4AF37]">
+                    {history.reduce((sum, h) => sum + (h.workHours || 0), 0).toFixed(1)} h
+                  </p>
+                </div>
+                <div style={glassCard} className="p-5 text-center flex flex-col justify-center items-center">
+                  <p className="text-[#9d6b7a] text-[11px] font-bold uppercase tracking-wider mb-1">
+                    {language === 'vi' ? 'Tăng ca (OT)' : 'Overtime Hours'}
+                  </p>
+                  <p className="text-2xl font-black text-emerald-600">
+                    {history.reduce((sum, h) => sum + (h.overtime || 0), 0).toFixed(1)} h
                   </p>
                 </div>
               </div>
-              
-              <div className="flex gap-3 w-full md:w-auto shrink-0">
-                <button onClick={handleCheckIn} className="flex-1 md:flex-none px-6 py-2.5 bg-[#D4AF37] hover:bg-[#C9A94E] text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all hover:-translate-y-1 text-[13px]">
-                  <Fingerprint size={16}/> {t('time.check_in')}
-                </button>
-                <button onClick={handleCheckOut} className="flex-1 md:flex-none px-6 py-2.5 bg-white hover:bg-gray-50 text-[#3d1a2e] border border-gray-200 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-1 shadow-sm text-[13px]">
-                  <LogOut size={16}/> {t('time.check_out')}
-                </button>
+
+              {/* Khối Bảng Lịch sử */}
+              <div style={glassCard} className="p-6 md:p-8">
+                <h3 className="text-[#3d1a2e] font-bold mb-5 flex items-center gap-2 text-[15px]">
+                  <CalendarCheck size={18} color="#D4AF37" /> {t('time.history_title')}
+                </h3>
+                
+                <div className="overflow-x-auto bg-white/40 rounded-xl border border-white shadow-sm">
+                  <table className="w-full text-left border-collapse whitespace-nowrap">
+                    <thead>
+                      <tr className="bg-white/60 border-b border-gray-100">
+                        <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_date')}</th>
+                        <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_in')}</th>
+                        <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_out')}</th>
+                        <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_work')}</th>
+                        <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_ot')}</th>
+                        <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_status')}</th>
+                        <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_notes')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.length > 0 ? history.map((item, index) => (
+                        <tr key={index} className="border-b border-gray-100/50 hover:bg-white/70 transition-colors">
+                          <td className="py-3 px-5 text-[#3d1a2e] text-[13px] font-bold">{item.date}</td>
+                          <td className="py-3 px-5 text-[#3d1a2e] text-[13px]">{item.checkIn}</td>
+                          <td className="py-3 px-5 text-[#3d1a2e] text-[13px]">
+                            {item.status === 'Đang làm việc' ? '--:--:--' : item.checkOut}
+                          </td>
+                          <td className="py-3 px-5 text-[#3d1a2e] text-[13px] font-medium">
+                            {item.status === 'Đang làm việc' ? '--' : `${item.workHours || 0} ${t('time.hours')}`}
+                          </td>
+                          <td className="py-3 px-5 text-[#3d1a2e] text-[13px]">
+                            {item.overtime || 0} {t('time.hours')}
+                          </td>
+                          <td className="py-3 px-5">
+                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 ${
+                              item.status === 'Đang làm việc' 
+                                ? 'bg-amber-100 text-amber-700' 
+                                : 'bg-emerald-100 text-emerald-700'
+                            }`}>
+                              {item.status === 'Đang làm việc' ? <Clock size={12}/> : <CheckCircle2 size={12}/>} 
+                              {item.status === 'Đang làm việc' ? t('time.working') : (language === 'vi' ? 'Đã kết ca' : 'Completed')}
+                            </span>
+                          </td>
+                          <td className="py-3 px-5 text-[#9d6b7a] text-[12px] max-w-[150px] truncate" title={item.notes}>
+                            {item.notes}
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan={7} className="py-10 text-center text-[#9d6b7a] text-[13px] italic">
+                            {t('time.no_attendance')}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            <div style={glassCard} className="p-6 md:p-8">
-              <h3 className="text-[#3d1a2e] font-bold mb-5 flex items-center gap-2 text-[15px]">
-                <CalendarCheck size={18} color="#D4AF37" /> {t('time.history_title')}
-              </h3>
-              
-              <div className="overflow-x-auto bg-white/40 rounded-xl border border-white shadow-sm">
-                <table className="w-full text-left border-collapse whitespace-nowrap">
-                  <thead>
-                    <tr className="bg-white/60 border-b border-gray-100">
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_date')}</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_in')}</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_out')}</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_work')}</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_ot')}</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_status')}</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_notes')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.length > 0 ? history.map((item, index) => (
-                      <tr key={index} className="border-b border-gray-100/50 hover:bg-white/70 transition-colors">
-                        <td className="py-3 px-5 text-[#3d1a2e] text-[13px] font-bold">{item.date}</td>
-                        <td className="py-3 px-5 text-[#3d1a2e] text-[13px]">{item.checkIn}</td>
-                        <td className="py-3 px-5 text-[#3d1a2e] text-[13px]">
-                          {item.status === 'Đang làm việc' ? '--:--:--' : item.checkOut}
-                        </td>
-                        <td className="py-3 px-5 text-[#3d1a2e] text-[13px] font-medium">
-                          {item.status === 'Đang làm việc' ? '--' : `${item.workHours || 0} ${t('time.hours')}`}
-                        </td>
-                        <td className="py-3 px-5 text-[#3d1a2e] text-[13px]">
-                          {item.overtime || 0} {t('time.hours')}
-                        </td>
-                        <td className="py-3 px-5">
-                          <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 ${
-                            item.status === 'Đang làm việc' 
-                              ? 'bg-amber-100 text-amber-700' 
-                              : 'bg-emerald-100 text-emerald-700'
-                          }`}>
-                            {item.status === 'Đang làm việc' ? <Clock size={12}/> : <CheckCircle2 size={12}/>} 
-                            {item.status === 'Đang làm việc' ? t('time.working') : (language === 'vi' ? 'Đã kết ca' : 'Completed')}
-                          </span>
-                        </td>
-                        <td className="py-3 px-5 text-[#9d6b7a] text-[12px] max-w-[200px] truncate" title={item.notes}>
-                          {item.notes}
-                        </td>
-                      </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan={7} className="py-10 text-center text-[#9d6b7a] text-[13px] italic">
-                          {t('time.no_attendance')}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+            {/* 30% bên phải: Trạm Chấm Công (Card Đóng gói) */}
+            <div className="lg:col-span-1">
+              <div 
+                style={{ 
+                  ...glassCard, 
+                  background: "linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(253,248,240,0.85) 100%)",
+                  border: "2px solid rgba(212,175,55,0.25)",
+                  boxShadow: "0 12px 40px rgba(212,175,55,0.08)"
+                }} 
+                className="p-6 flex flex-col justify-between relative overflow-hidden"
+              >
+                {/* Họa tiết trang trí nhẹ nhàng thương hiệu */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 rounded-bl-full pointer-events-none"></div>
+
+                <div className="text-center pb-6 border-b border-[#D4AF37]/15">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] rounded-full text-[10px] font-bold tracking-widest uppercase mb-4">
+                    <Fingerprint size={12}/> {language === 'vi' ? 'Trạm Chấm Công' : 'Attendance Station'}
+                  </span>
+                  
+                  {/* Action Clock: To, Đậm, Font Monospace và ĐẾM GIÂY liên tục */}
+                  <h2 className="text-[#3d1a2e] text-[38px] font-black tracking-widest font-mono leading-none mb-2 tabular-nums">
+                    {formatTimeWithSeconds(currentTime)}
+                  </h2>
+
+                  <p className="text-[#9d6b7a] text-[12px] font-semibold uppercase tracking-wider">
+                    {currentTime.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                </div>
+
+                {/* Trạng thái hiện tại */}
+                <div className="py-6 flex flex-col items-center">
+                  <p className="text-[#9d6b7a] text-[11px] font-bold uppercase tracking-wider mb-2">
+                    {language === 'vi' ? 'Trạng thái nhân sự' : 'Your Shift Status'}
+                  </p>
+                  
+                  {history.length > 0 && history[0].status === 'Đang làm việc' ? (
+                    <span className="px-4 py-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-full text-[12px] font-bold flex items-center gap-1.5 shadow-sm animate-pulse">
+                      <Clock size={14} className="animate-spin" style={{ animationDuration: '6s' }} /> {language === 'vi' ? 'Đang Trong Ca Làm Việc' : 'Active In Shift'}
+                    </span>
+                  ) : (
+                    <span className="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-500 rounded-full text-[12px] font-bold flex items-center gap-1.5 shadow-sm">
+                      <Clock3 size={14}/> {language === 'vi' ? 'Chưa Vào Ca' : 'Out of Shift'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Nút bấm check-in/out khổng lồ được neo an toàn vào Card */}
+                <div className="space-y-4 pt-2">
+                  {history.length > 0 && history[0].status === 'Đang làm việc' ? (
+                    <button 
+                      onClick={handleCheckOut} 
+                      className="w-full py-4 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-[0.98] transition-all text-[14px] cursor-pointer"
+                    >
+                      <LogOut size={18}/> {language === 'vi' ? 'KẾT CA (CHECK OUT)' : 'SHIFT COMPLETE (CHECK OUT)'}
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={handleCheckIn} 
+                      className="w-full py-4 bg-gradient-to-r from-[#D4AF37] to-[#C9A94E] hover:from-[#C9A94E] hover:to-[#Bca043] text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all text-[14px] cursor-pointer"
+                    >
+                      <Fingerprint size={18}/> {language === 'vi' ? 'BẮT ĐẦU CA (CHECK IN)' : 'START SHIFT (CHECK IN)'}
+                    </button>
+                  )}
+
+                  {/* Chân đế cho nút bấm */}
+                  <div className="pt-4 border-t border-gray-100 flex flex-col items-center text-center gap-1.5">
+                    <p className="text-[11px] text-gray-400 italic leading-snug">
+                      {language === 'vi' 
+                        ? 'Hệ thống tự động ghi nhận vị trí IP và thời gian thực lúc bấm nút.' 
+                        : 'System automatically logs IP location and real-time upon clicking.'}
+                    </p>
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                      <span>📍</span>
+                      <span>
+                        {language === 'vi' ? 'Chi nhánh: Lumière Quận 1' : 'Branch: Lumière District 1'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
+
           </div>
         )}
 
