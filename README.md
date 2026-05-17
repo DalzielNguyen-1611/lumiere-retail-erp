@@ -1,81 +1,143 @@
-# Hệ thống quản lý kinh doanh mỹ thẩm
+# 🏆 Lumière ERP - Hệ Thống Quản Trị Doanh Nghiệp Chuỗi Bán Lẻ & Dịch Vụ Làm Đẹp
 
-## Giới thiệu
-Mô tả ngắn gọn về dự án, mục đích và đối tượng sử dụng.
+> **Hệ thống Quản lý Cơ sở Dữ liệu (DBMS - IS210)**  
+> Dự án kết hợp công nghệ Frontend hiện đại, Backend bảo mật và Cơ sở dữ liệu Oracle Database mạnh mẽ để quản lý toàn diện chuỗi cửa hàng bán lẻ và dịch vụ làm đẹp cao cấp Lumière.
 
-## Công nghệ sử dụng
-* **Backend:** Node.js
-* **Frontend:** Next.js (TypeScript)
-* **Database:** Oracle 21c
-* **UI Library:** Tailwind CSS
+---
 
-## Hướng dẫn cài đặt
-1. Clone dự án: `git clone https://github.com/DalzielNguyen-1611/IS210-Database-Management-System.git`
-2. Cài đặt môi trường phù hợp cho những công nghệ sử dụng bên trên
-3. Tạo user Oracle và import database
+## 🌟 Tổng Quan Dự Án
 
-## Thành viên thực hiện
-* Nguyễn Đoàn Đức Hiếu - 24520500 (Nhóm trưởng)
-* Nguyễn Nữ Trà Giang -
-* Lê Thị Bích Duyên -
-* Hồ Thị Thùy Dung - 
+**Lumière ERP** là một giải pháp quản trị doanh nghiệp toàn diện (Enterprise Resource Planning) được thiết kế đặc thù cho chuỗi cửa hàng bán lẻ mỹ phẩm, spa và chăm sóc sắc đẹp cao cấp. Hệ thống giải quyết các bài toán nghiệp vụ phức tạp từ khâu bán hàng (POS), luân chuyển kho hàng, mua sắm nhà cung cấp, đổi trả hàng hoàn tiền, chấm công nhân sự thời gian thực, cho đến tự động tính toán lương thuế TNCN và quản trị dòng tiền sổ cái kế toán theo tiêu chuẩn chuẩn mực VAS.
 
-## Cấu trúc thư mục
+---
+
+## 🛠️ Công Nghệ Sử Dụng
+
+| Tầng (Layer) | Công Nghệ & Thư Viện | Vai Trò |
+| :--- | :--- | :--- |
+| **Frontend** | React 18, Vite, TypeScript, TailwindCSS, Lucide Icons, Sonner | Xây dựng giao diện Single Page Application (SPA) mượt mà, phản hồi nhanh, thiết kế sang trọng chuẩn SaaS. |
+| **Backend** | Node.js, Express.js, `oracledb` driver, JWT, dotenv | API Gateway bảo mật, xử lý xác thực, điều hướng nghiệp vụ và giao tiếp với Oracle Database. |
+| **Database** | Oracle Database 19c/21c | Lưu trữ dữ liệu quan hệ, thực thi ràng buộc toàn vẹn, Trigger, Function và Stored Procedure PL/SQL để đồng bộ hóa giao dịch. |
+
+---
+
+## 🧭 Cấu Trúc Thư Mục Hệ Thống
+
 ```text
-petsmart-erp/ (Thư mục gốc của dự án)
-│  
-├── frontend/               # Toàn bộ code Next.js (Cấu hình như đã bàn)
-│   │
-│   ├──.next/               # Chứa mã nguồn đã biên dịch. [TUYỆT ĐỐI KHÔNG SỬA]
-│   │
-│   ├── app/                # Hệ thống Router, giao diện trang và bố cục chính. (Nơi viết code chính).
-│   │
-│   ├── components/         # Các thành phần UI tái sử dụng (Button, Table, Navbar). (Nơi viết code chính).
-│   │
-│   ├── hooks/              # Các hàm xử lý logic giao diện và trạng thái (State) riêng biệt. (Nơi viết code chính).
-│   │
-│   ├── lib/                # Các hàm tiện ích dùng chung và cấu hình thư viện. (Nơi viết code chính).
-│   │
-│   ├── node_modules/       # Thư mục lưu trữ các thư viện phụ thuộc. [TUYỆT ĐỐI KHÔNG SỬA]
-│   │
-│   ├── services/           # Tầng giao tiếp và gọi API từ thư mục Backend. (Nơi viết code chính).
-│   │
-│   ├── types/              # Định nghĩa kiểu dữ liệu và cấu trúc thực thể. (Nơi viết code chính).
-│   │
-│   ├── .gitignore          # Danh sách tệp tin không đẩy lên kho lưu trữ Git.
-│   │
-│   ├── AGENTS.md    
-│   │
-│   ├── eslint.config.mjs   # Cấu hình bộ kiểm tra chuẩn code. (Ít khi phải sửa).
-│   │
-│   ├── next-env.d.ts       # Tệp khai báo kiểu dữ liệu hệ thống cho Next.js. [KHÔNG NÊN SỬA] - Next.js tự quản lý để đồng bộ với TypeScript.
-│   │
-│   ├── next.config.ts      # Tệp điều chỉnh thông số vận hành Framework. (Sửa khi cần cấu hình đặc biệt).
-│   │
-│   ├── package-lock.json   # Bản chốt chi tiết phiên bản của các thư viện. [TUYỆT ĐỐI KHÔNG SỬA] - File này tự cập nhật theo package.json.
-│   │
-│   ├── package.json        # Thông tin dự án và danh sách thư viện. (Chỉ sửa khi cần thêm script hoặc đổi thông tin dự án).
-│   │
-│   ├── postcss.config.mjs  # Cấu hình bộ tiền xử lý để tối ưu mã CSS. (Ít khi phải sửa).
-│   │
-│   ├── README.md           # Tài liệu hướng dẫn và mô tả tổng quan dự án. (Nên sửa để làm báo cáo).
-│   │
-│   └── tsconfig.json       # Cấu hình các quy tắc biên dịch TypeScript. (Ít khi phải sửa).
+IS210-Database-Management-System/   (Thư mục gốc dự án)
 │
-├── backend/                # Toàn bộ code xử lý Server & Oracle
+├── frontend/                        # Mã nguồn ứng dụng Client (Vite + React)
 │   ├── src/
-│   │   ├── controllers/
-│   │   ├── services/       # Logic nghiệp vụ
-│   │   ├── repository/     # Truy vấn SQL/PL-SQL
-│   │   └── app.ts
-│   ├── package.json
-│   └── .env                # Lưu kết nối Oracle (DATABASE_URL=...)
-├── database/               # Nơi lưu trữ tài liệu về DB cho môn IS210
-│   ├── schema/             # Các lệnh CREATE TABLE, SEQUENCE
-│   │   ├──
-│   ├── procedures.sql      # Các Stored Procedures trong Oracle
-│   └── diagrams/           # File thiết kế ERD, BPMN
-├── docs/                   # Tài liệu dự án (SRS, Bản mô tả 10 tỷ VNĐ)
-├── .gitignore              # Quan trọng: Chặn đẩy node_modules và .env lên GitHub
-└── README.md               # Hướng dẫn chạy cả 2 phần Front & Back
+│   │   ├── components/              # Các UI component dùng chung (Sidebar, Layout...)
+│   │   ├── context/                 # Quản lý Trạng thái ngôn ngữ, Xác thực người dùng
+│   │   ├── pages/                   # Giao diện chính (POS, HR, Finance, Procurement, Returns...)
+│   │   └── main.tsx                 # Điểm khởi chạy React app
+│   ├── vite.config.ts               # Cấu hình đóng gói Vite
+│   └── package.json
+│
+├── backend/                         # Mã nguồn máy chủ API (Node.js + Express)
+│   ├── src/
+│   │   ├── modules/                 # Phân chia nghiệp vụ (Auth, HR, POS, Finance...)
+│   │   └── main.ts                  # Khởi chạy Express server
+│   ├── .env                         # Cấu hình kết nối DB và JWT Secret Key
+│   └── package.json
+│
+└── database/                        # Cơ sở dữ liệu Oracle PL/SQL
+    ├── schema/
+    │   └── db.sql                   # Mã lệnh khởi tạo 27 bảng dữ liệu quan hệ
+    ├── procedures.sql               # Các Stored Procedure (Duyệt đổi trả, lương, thuế...)
+    ├── trigger.sql                  # Các ràng buộc, tự động tính toán tồn kho, kế toán
+    ├── fuction.sql                  # Các hàm tiện ích tính toán
+    └── constraint.sql               # Các ràng buộc toàn vẹn dữ liệu
 ```
+
+---
+
+## 💼 Các Phân Hệ Nghiệp Vụ Chính (Modules)
+
+### 1. 🛒 Bán Hàng Tại Quầy (POS & CRM)
+* Hỗ trợ tìm kiếm nhanh sản phẩm qua mã vạch/tên, thanh toán đa phương thức (Tiền mặt, Chuyển khoản).
+* Tích hợp cơ chế tích lũy điểm thưởng và nâng hạng khách hàng (`KHACH_HANG`) tự động qua Trigger.
+
+### 2. 📦 Quản Lý Kho Hàng & Kiểm Kê (Inventory & Auditing)
+* Theo dõi số lượng tồn kho thực tế (`TON_KHO`), cảnh báo hàng sắp hết hạn sử dụng.
+* Quy trình kiểm kê kho chặt chẽ (`CHI_TIET_KIEM_KE`), tự động tính toán chênh lệch và cập nhật số lượng thực tế.
+
+### 3. 🚚 Vận Chuyển & Luân Chuyển Kho (Logistics & Transfer)
+* Tạo phiếu chuyển kho giữa các chi nhánh (`CUA_HANG`) và kho hàng (`KHO`).
+* Theo dõi trạng thái giao nhận và tự động cập nhật số lượng xuất/nhập ở hai đầu kho chi nhánh.
+
+### 4. 🤝 Mua Hàng & Đối Tác (Procurement & Supplier)
+* Quản lý thông tin nhà cung cấp (`DOI_TAC`) chi tiết.
+* Lập đơn đặt hàng mua (PO), quản lý tiến độ nhập kho và lưu trữ hóa đơn VAT nhập hàng.
+
+### 5. 🔄 Đổi Trả Hàng Hóa (Returns Engine)
+* Đảm bảo tính toàn vẹn: Mỗi hóa đơn chỉ được đổi trả tối đa số lượng sản phẩm đã mua.
+* Sử dụng Stored Procedure Oracle **`SP_DUYET_PHIEU_DOI_TRA`** để xử lý đồng bộ giao dịch kế toán kép (VAS) và nhập lại kho hàng an toàn tuyệt đối.
+
+### 6. 🕒 Nhân Sự & Trạm Chấm Công (HR & Time Clock)
+* **Trạm Chấm Công (Action Clock)**: Thiết kế lớn, đậm, dùng font Monospace và đếm giây thời gian thực liên tục.
+* Đóng gói card chấm công chuyên nghiệp, định vị chi nhánh, tự động ghi nhận lịch sử vào ca/kết ca.
+* Quản lý đơn xin nghỉ phép (`DON_XIN_NGHI_PHEP`) tự động tìm quản lý chi nhánh để phê duyệt.
+
+### 7. 💵 Bảng Lương & Biểu Thuế TNCN (Payroll & Taxes)
+* Tự động tính toán lương nét (`PHIEU_LUONG`), trích đóng các khoản bảo hiểm (BHXH, BHYT, BHTN) theo đúng tỷ lệ luật định.
+* Tự động áp dụng giảm trừ gia cảnh và tính thuế TNCN theo biểu thuế lũy tiến từng phần bằng hàm PL/SQL.
+
+### 8. 📊 Tài Chính Kế Toán (Finance Ledger)
+* Quản lý danh sách tài khoản kế toán doanh nghiệp (`TAI_KHOAN`).
+* Nhật ký giao dịch kép (`GIAO_DICH_TIEN`) tự động ghi nhận khi phát sinh các sự kiện bán hàng, mua hàng, trả lương, hoàn tiền.
+
+---
+
+## 🔑 Tài Khoản Khảo Sát Hệ Thống
+
+| Tài Khoản | Mật Khẩu | Vai Trò (Role) | Chức Năng Khảo Sát Phù Hợp |
+| :--- | :--- | :--- | :--- |
+| **`admin`** | `123456` | Quản trị viên tối cao | Toàn quyền kiểm soát hệ thống, cấu hình đa cửa hàng, nhân sự. |
+| **`sales_hn`** | `123456` | Nhân viên bán hàng | Thao tác POS bán hàng, đổi trả hàng hóa, chấm công ca làm việc. |
+| **`warehouse_hn`** | `123456` | Thủ kho chi nhánh | Quản lý tồn kho, nhập hàng mua (PO), luân chuyển kho hàng. |
+| **`accounting_hn`** | `123456` | Kế toán viên | Quản lý dòng tiền sổ cái, bảng lương, thanh toán đơn nhập hàng. |
+
+---
+
+## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy
+
+### Bước 1: Cấu hình Cơ sở dữ liệu Oracle Database
+1. Khởi chạy Oracle Database và tạo một User mới (Ví dụ: `PROJECT_IS_210` / `123456`).
+2. Thực thi lần lượt các tệp lệnh SQL trong thư mục `/database`:
+   * Chạy `schema/db.sql` để khởi tạo cấu trúc bảng.
+   * Chạy `constraint.sql` để áp dụng các ràng buộc.
+   * Chạy `fuction.sql`, `trigger.sql` và `procedures.sql` để nạp các hàm, trigger nghiệp vụ.
+
+### Bước 2: Cài đặt và Khởi chạy API Backend
+1. Di chuyển vào thư mục backend: `cd backend`
+2. Cài đặt các gói phụ thuộc: `npm install`
+3. Sao chép cấu hình môi trường: Tạo tệp `.env` trong thư mục `backend/` với nội dung:
+   ```env
+   PORT=5000
+   JWT_SECRET=Lumiere_Secret_Key_2026
+   DB_HOST=localhost
+   DB_PORT=1521
+   DB_USERNAME=PROJECT_IS_210
+   DB_PASSWORD=123456
+   DB_SERVICE_NAME=DMSandITPM
+   ```
+4. Khởi chạy Server ở chế độ phát triển: `npm run dev` (API chạy tại: `http://localhost:5000`)
+
+### Bước 3: Cài đặt và Khởi chạy Giao diện Frontend
+1. Di chuyển vào thư mục frontend: `cd ../frontend`
+2. Cài đặt các gói phụ thuộc: `npm install`
+3. Khởi chạy Client: `npm run dev` (Giao diện chạy tại: `http://localhost:5174` hoặc `http://localhost:5173`)
+
+---
+
+## 👥 Thành Viên Thực Hiện
+
+* **Nguyễn Đoàn Đức Hiếu** - *24520500* (Nhóm trưởng)
+* **Nguyễn Nữ Trà Giang** - *2452xxxx*
+* **Lê Thị Bích Duyên** - *2452xxxx*
+* **Hồ Thị Thùy Dung** - *2452xxxx*
+
+---
+🇻🇳 *Bản quyền thuộc về Nhóm phát triển Dự án Hệ thống quản trị doanh nghiệp Lumière ERP - Đại học Công nghệ Thông tin - ĐHQG TP.HCM.*
