@@ -11,6 +11,15 @@
 
 ---
 
+## 👥 Thành Viên Thực Hiện
+
+* **Nguyễn Đoàn Đức Hiếu** - *24520500* (Nhóm trưởng)
+* **Nguyễn Nữ Trà Giang** - *2452xxxx*
+* **Lê Thị Bích Duyên** - *2452xxxx*
+* **Hồ Thị Thùy Dung** - *2452xxxx*
+
+---
+
 ## 🛠️ Công Nghệ Sử Dụng
 
 | Tầng (Layer) | Công Nghệ & Thư Viện | Vai Trò |
@@ -129,15 +138,6 @@ IS210-Database-Management-System/   (Thư mục gốc dự án)
 1. Di chuyển vào thư mục frontend: `cd ../frontend`
 2. Cài đặt các gói phụ thuộc: `npm install`
 3. Khởi chạy Client: `npm run dev` (Giao diện chạy tại: `http://localhost:5174` hoặc `http://localhost:5173`)
-
----
-
-## 👥 Thành Viên Thực Hiện
-
-* **Nguyễn Đoàn Đức Hiếu** - *24520500* (Nhóm trưởng)
-* **Nguyễn Nữ Trà Giang** - *2452xxxx*
-* **Lê Thị Bích Duyên** - *2452xxxx*
-* **Hồ Thị Thùy Dung** - *2452xxxx*
 
 ---
 🇻🇳 *Bản quyền thuộc về Nhóm phát triển Dự án Hệ thống quản trị doanh nghiệp Lumière ERP - Đại học Công nghệ Thông tin - ĐHQG TP.HCM.*
