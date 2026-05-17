@@ -1,29 +1,36 @@
 // File: src/pages/Settings.tsx
 import React, { useState, useEffect } from "react";
-import { Settings as SettingsIcon, Globe, Palette, Printer, Bell, Shield, ChevronRight, Sparkles, X } from "lucide-react";
+import { Settings as SettingsIcon, Globe, Palette, Printer, Bell, Shield, ChevronRight, Sparkles, X, Check } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 const glassCard = { background: "rgba(255,255,255,0.72)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(61,26,46,0.06)", borderRadius: "20px" };
 
-const settings = [
-  { icon: Globe, label: "Ngôn ngữ", value: "Vietnamese (Tiếng Việt)" },
-  { icon: Palette, label: "Giao diện", value: "Sáng (Glassmorphism)" },
-  { icon: Printer, label: "Máy in hóa đơn", value: "Epson TM-T88VII (Đã kết nối)" },
-  { icon: Bell, label: "Thông báo", value: "Email & App Alerts" },
-  { icon: Shield, label: "Bảo mật", value: "Phân quyền truy cập" },
-];
+// Chúng ta sẽ định nghĩa mảng settings bên trong component để sử dụng được hàm t()
 
 export function Settings() {
+  const { language, setLanguage, t } = useLanguage();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [toast, setToast] = useState<string | null>(null);
+  const [showLangModal, setShowLangModal] = useState(false);
+
+  const settings = [
+    { id: "lang", icon: Globe, label: t('settings.language'), value: language === 'vi' ? 'Tiếng Việt' : 'English' },
+    { id: "theme", icon: Palette, label: t('settings.theme'), value: language === 'vi' ? 'Sáng (Glassmorphism)' : 'Light (Glassmorphism)' },
+    { id: "printer", icon: Printer, label: t('settings.printer'), value: "Epson TM-T88VII" },
+    { id: "bell", icon: Bell, label: t('settings.notifications'), value: "Email & App Alerts" },
+    { id: "shield", icon: Shield, label: t('settings.security'), value: language === 'vi' ? "Phân quyền truy cập" : "Access Control" },
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const handleItemClick = (label: string) => {
-    if (["Máy in hóa đơn", "Thông báo", "Bảo mật"].includes(label)) {
-      setToast("Tính năng đang phát triển");
+  const handleItemClick = (id: string) => {
+    if (id === "lang") {
+      setShowLangModal(true);
+    } else if (["printer", "bell", "shield", "theme"].includes(id)) {
+      setToast(t('settings.coming_soon'));
       setTimeout(() => setToast(null), 3000);
     }
   };
@@ -53,15 +60,15 @@ export function Settings() {
             {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
         </div>
-        <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>Cài Đặt Hệ Thống</h1>
+        <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>{t('settings.title')}</h1>
       </div>
 
       <div className="w-full" style={glassCard}>
         <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {settings.map(({ icon: Icon, label, value }) => (
+          {settings.map(({ id, icon: Icon, label, value }) => (
             <div 
-              key={label} 
-              onClick={() => handleItemClick(label)}
+              key={id} 
+              onClick={() => handleItemClick(id)}
               className="flex items-center gap-4 p-6 rounded-2xl border border-white bg-white/50 shadow-sm hover:bg-white/80 hover:shadow-md hover:-translate-y-0.5 cursor-pointer transition-all active:scale-[0.98]"
             >
               <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-inner border border-amber-100">
@@ -76,6 +83,37 @@ export function Settings() {
           ))}
         </div>
       </div>
+
+      {/* Language Selection Modal */}
+      {showLangModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-[32px] p-8 w-full max-w-sm shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+            <button onClick={() => setShowLangModal(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            <h2 className="text-xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>{t('settings.language')}</h2>
+            <div className="space-y-3">
+              {[
+                { id: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
+                { id: 'en', label: 'English', flag: '🇺🇸' }
+              ].map((lang) => (
+                <button
+                  key={lang.id}
+                  onClick={() => {
+                    setLanguage(lang.id as 'vi' | 'en');
+                    setShowLangModal(false);
+                  }}
+                  className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${language === lang.id ? 'bg-[#D4AF37]/10 border border-[#D4AF37]/30' : 'hover:bg-gray-50 border border-transparent'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{lang.flag}</span>
+                    <span className={`font-bold text-[15px] ${language === lang.id ? 'text-[#D4AF37]' : 'text-[#3d1a2e]'}`}>{lang.label}</span>
+                  </div>
+                  {language === lang.id && <Check size={18} className="text-[#D4AF37]" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

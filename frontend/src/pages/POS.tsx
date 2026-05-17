@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useLanguage } from "../context/LanguageContext";
 import {
   Search,
   Plus,
@@ -84,6 +85,7 @@ const getImageUrl = (imagePath: string) => {
 };
 
 export function POS() {
+  const { t, language } = useLanguage();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -431,7 +433,7 @@ export function POS() {
         {activeTab === "refill" && (
           <div className="px-4 py-2 rounded-xl flex items-center justify-center gap-2 animate-pulse" style={{ background: "rgba(220,38,38,0.1)", border: "1px dashed rgba(220,38,38,0.3)" }}>
             <Package size={16} color="#dc2626" />
-            <span style={{ color: "#dc2626", fontSize: "12px", fontWeight: 700 }}>CHẾ ĐỘ YÊU CẦU NHẬP HÀNG: Click vào sản phẩm để thêm vào giỏ Refill.</span>
+            <span style={{ color: "#dc2626", fontSize: "12px", fontWeight: 700 }}>{language === 'vi' ? 'CHẾ ĐỘ YÊU CẦU NHẬP HÀNG: Click vào sản phẩm để thêm vào giỏ Refill.' : 'REFILL REQUEST MODE: Click on products to add to Refill cart.'}</span>
           </div>
         )}
 
@@ -442,13 +444,13 @@ export function POS() {
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm tên, SKU, barcode…"
+              placeholder={language === 'vi' ? 'Tìm tên, SKU, barcode…' : 'Search name, SKU, barcode…'}
               style={{ border: "none", outline: "none", background: "transparent", color: "#3d1a2e", fontSize: "13px", flex: 1 }}
             />
           </div>
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)" }}>
             <ScanLine size={15} color="#D4AF37" />
-            <span style={{ color: "#9d6b7a", fontSize: "12px" }}>Quét mã</span>
+            <span style={{ color: "#9d6b7a", fontSize: "12px" }}>{language === 'vi' ? 'Quét mã' : 'Scan'}</span>
           </div>
         </div>
 
@@ -555,7 +557,7 @@ export function POS() {
             }}
           >
             <ShoppingCart size={16} /> 
-            Giỏ hàng {cartCount > 0 && <span className="bg-[#D4AF37] text-white px-1.5 py-0.5 rounded-md text-[10px] ml-1">{cartCount}</span>}
+            {language === 'vi' ? 'Giỏ hàng' : 'Cart'} {cartCount > 0 && <span className="bg-[#D4AF37] text-white px-1.5 py-0.5 rounded-md text-[10px] ml-1">{cartCount}</span>}
           </button>
           <button
             onClick={() => setActiveTab("refill")}
@@ -569,7 +571,7 @@ export function POS() {
             }}
           >
             <Package size={16} /> 
-            Cần nhập {refillCount > 0 && <span className="bg-[#dc2626] text-white px-1.5 py-0.5 rounded-md text-[10px] ml-1">{refillCount}</span>}
+            {language === 'vi' ? 'Cần nhập' : 'Refill'} {refillCount > 0 && <span className="bg-[#dc2626] text-white px-1.5 py-0.5 rounded-md text-[10px] ml-1">{refillCount}</span>}
           </button>
         </div>
 
@@ -579,15 +581,15 @@ export function POS() {
         {activeTab === "sales" ? (
           <>
             <div className="px-4 py-4 flex items-center justify-between border-b shrink-0" style={{ borderColor: "rgba(212,175,55,0.15)", background: "rgba(255,255,255,0.5)" }}>
-              <span style={{ color: "#3d1a2e", fontSize: "14px", fontWeight: 700 }}>Đơn đang chọn</span>
+              <span style={{ color: "#3d1a2e", fontSize: "14px", fontWeight: 700 }}>{language === 'vi' ? 'Đơn đang chọn' : 'Active Order'}</span>
               <div className="flex gap-1.5">
                 <button onClick={holdOrder} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg" style={{ background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)" }}>
                   <PauseCircle size={13} color="#92740d" />
-                  <span style={{ color: "#92740d", fontSize: "11px", fontWeight: 600 }}>Tạm giữ</span>
+                  <span style={{ color: "#92740d", fontSize: "11px", fontWeight: 600 }}>{language === 'vi' ? 'Tạm giữ' : 'Hold'}</span>
                 </button>
                 <button onClick={() => setCart([])} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg" style={{ background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.15)" }}>
                   <XCircle size={13} color="#dc2626" />
-                  <span style={{ color: "#dc2626", fontSize: "11px", fontWeight: 600 }}>Hủy đơn</span>
+                  <span style={{ color: "#dc2626", fontSize: "11px", fontWeight: 600 }}>{language === 'vi' ? 'Hủy đơn' : 'Cancel'}</span>
                 </button>
               </div>
             </div>
@@ -612,7 +614,7 @@ export function POS() {
               {cart.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full" style={{ opacity: 0.5 }}>
                   <ShoppingCart size={36} color="#D4AF37" strokeWidth={1} />
-                  <p style={{ color: "#9d6b7a", fontSize: "13px", marginTop: 12 }}>Giỏ hàng đang trống</p>
+                  <p style={{ color: "#9d6b7a", fontSize: "13px", marginTop: 12 }}>{language === 'vi' ? 'Giỏ hàng đang trống' : 'Cart is empty'}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -662,7 +664,7 @@ export function POS() {
             <div className="px-4 py-3 shrink-0 border-t" style={{ borderColor: "rgba(212,175,55,0.12)", background: "rgba(253,242,248,0.3)" }}>
               <div className="flex items-center gap-1.5 mb-2">
                 <User size={13} color="#D4AF37" />
-                <span style={{ color: "#3d1a2e", fontSize: "12px", fontWeight: 700 }}>Khách hàng</span>
+                <span style={{ color: "#3d1a2e", fontSize: "12px", fontWeight: 700 }}>{t('pos.customer')}</span>
               </div>
 
               {selectedCustomer ? (
@@ -681,44 +683,44 @@ export function POS() {
                 </div>
               ) : showNewCustomerForm ? (
                 <div className="p-3 rounded-xl" style={{ background: "white", border: "1px dashed rgba(212,175,55,0.4)" }}>
-                  <p style={{ color: "#9d6b7a", fontSize: "11px", marginBottom: 6 }}>SĐT <strong style={{ color: "#D4AF37" }}>{customerPhone}</strong> chưa có</p>
-                  <input value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} placeholder="Nhập tên khách hàng mới..." style={{ width: "100%", border: "1px solid rgba(212,175,55,0.25)", borderRadius: 8, padding: "6px 10px", fontSize: "12px", outline: "none", marginBottom: 8, background: "#fdfbf7" }} />
+                  <p style={{ color: "#9d6b7a", fontSize: "11px", marginBottom: 6 }}>{t('pos.phone')} <strong style={{ color: "#D4AF37" }}>{customerPhone}</strong> {t('pos.not_exist')}</p>
+                  <input value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} placeholder={t('pos.enter_new_name')} style={{ width: "100%", border: "1px solid rgba(212,175,55,0.25)", borderRadius: 8, padding: "6px 10px", fontSize: "12px", outline: "none", marginBottom: 8, background: "#fdfbf7" }} />
                   <div className="flex gap-2">
-                    <button onClick={createNewCustomer} disabled={!newCustomerName.trim() || isCreatingCustomer} className="flex-1 py-1.5 rounded-lg transition-all" style={{ background: (!newCustomerName.trim() || isCreatingCustomer) ? "#ccc" : "linear-gradient(135deg, #D4AF37, #C9A94E)", color: "white", fontSize: "11px", fontWeight: 600 }}>{isCreatingCustomer ? "Đang tạo..." : "+ Tạo & Chọn"}</button>
-                    <button onClick={() => { setShowNewCustomerForm(false); setSelectedCustomer({ id: "1", name: "Khách vãng lai", phone: customerPhone, tier: "Silver", points: 0 }); }} className="px-3 py-1.5 rounded-lg" style={{ background: "rgba(244,63,94,0.08)", color: "#dc2626", fontSize: "11px", fontWeight: 600 }}>Bỏ qua</button>
+                    <button onClick={createNewCustomer} disabled={!newCustomerName.trim() || isCreatingCustomer} className="flex-1 py-1.5 rounded-lg transition-all" style={{ background: (!newCustomerName.trim() || isCreatingCustomer) ? "#ccc" : "linear-gradient(135deg, #D4AF37, #C9A94E)", color: "white", fontSize: "11px", fontWeight: 600 }}>{isCreatingCustomer ? t('pos.creating') : t('pos.create_and_select')}</button>
+                    <button onClick={() => { setShowNewCustomerForm(false); setSelectedCustomer({ id: "1", name: language === 'vi' ? "Khách vãng lai" : "Walk-in Guest", phone: customerPhone, tier: "Silver", points: 0 }); }} className="px-3 py-1.5 rounded-lg" style={{ background: "rgba(244,63,94,0.08)", color: "#dc2626", fontSize: "11px", fontWeight: 600 }}>{t('pos.skip')}</button>
                   </div>
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} onKeyDown={(e) => e.key === "Enter" && searchCustomer()} placeholder="Tìm theo số điện thoại…" style={{ flex: 1, border: "1px solid rgba(212,175,55,0.25)", borderRadius: 10, padding: "7px 12px", fontSize: "12px", outline: "none", background: "rgba(255,255,255,0.7)", color: "#3d1a2e" }} />
-                  <button onClick={searchCustomer} className="px-3 rounded-xl" style={{ background: "rgba(212,175,55,0.15)", border: "1px solid rgba(212,175,55,0.3)", color: "#92740d", fontSize: "12px", fontWeight: 600 }}>Tìm</button>
+                  <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} onKeyDown={(e) => e.key === "Enter" && searchCustomer()} placeholder={t('pos.search_phone')} style={{ flex: 1, border: "1px solid rgba(212,175,55,0.25)", borderRadius: 10, padding: "7px 12px", fontSize: "12px", outline: "none", background: "rgba(255,255,255,0.7)", color: "#3d1a2e" }} />
+                  <button onClick={searchCustomer} className="px-3 rounded-xl" style={{ background: "rgba(212,175,55,0.15)", border: "1px solid rgba(212,175,55,0.3)", color: "#92740d", fontSize: "12px", fontWeight: 600 }}>{t('pos.search_btn')}</button>
                 </div>
               )}
             </div>
 
             <div className="px-4 pb-4 pt-3 shrink-0" style={{ background: "rgba(255,255,255,0.4)" }}>
               <div className="space-y-1.5 mb-3 p-3 rounded-xl" style={{ background: "rgba(253,242,248,0.5)", border: "1px solid rgba(212,175,55,0.12)" }}>
-                <div className="flex justify-between"><span style={{ color: "#9d6b7a", fontSize: "12px" }}>Tạm tính</span><span style={{ color: "#3d1a2e", fontSize: "12px", fontWeight: 600 }}>{subtotal.toFixed(2)} ₫</span></div>
-                <div className="flex justify-between"><span style={{ color: "#9d6b7a", fontSize: "12px" }}>VAT (10%)</span><span style={{ color: "#9d6b7a", fontSize: "12px" }}>{tax.toFixed(2)} ₫</span></div>
-                <div className="flex justify-between pt-1.5 border-t" style={{ borderColor: "rgba(212,175,55,0.2)" }}><span style={{ color: "#3d1a2e", fontSize: "14px", fontWeight: 700 }}>Tổng thanh toán</span><span style={{ color: "#D4AF37", fontSize: "18px", fontWeight: 800 }}>{total.toFixed(2)} ₫</span></div>
+                <div className="flex justify-between"><span style={{ color: "#9d6b7a", fontSize: "12px" }}>{t('pos.subtotal')}</span><span style={{ color: "#3d1a2e", fontSize: "12px", fontWeight: 600 }}>{subtotal.toFixed(2)} ₫</span></div>
+                <div className="flex justify-between"><span style={{ color: "#9d6b7a", fontSize: "12px" }}>{t('pos.tax')}</span><span style={{ color: "#9d6b7a", fontSize: "12px" }}>{tax.toFixed(2)} ₫</span></div>
+                <div className="flex justify-between pt-1.5 border-t" style={{ borderColor: "rgba(212,175,55,0.2)" }}><span style={{ color: "#3d1a2e", fontSize: "14px", fontWeight: 700 }}>{t('pos.total_payment')}</span><span style={{ color: "#D4AF37", fontSize: "18px", fontWeight: 800 }}>{total.toFixed(2)} ₫</span></div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <button onClick={() => setPaymentMethod("cash")} className="flex items-center justify-center gap-2 py-3 rounded-xl transition-all" style={{ background: paymentMethod === "cash" ? "linear-gradient(135deg, #4ade80, #22c55e)" : "rgba(255,255,255,0.6)", border: `2px solid ${paymentMethod === "cash" ? "#22c55e" : "rgba(74,222,128,0.3)"}`, boxShadow: paymentMethod === "cash" ? "0 4px 14px rgba(34,197,94,0.3)" : "none" }}>
-                  <Banknote size={16} color={paymentMethod === "cash" ? "white" : "#16a34a"} /><span style={{ color: paymentMethod === "cash" ? "white" : "#16a34a", fontSize: "12px", fontWeight: 700 }}>Tiền mặt</span>
+                  <Banknote size={16} color={paymentMethod === "cash" ? "white" : "#16a34a"} /><span style={{ color: paymentMethod === "cash" ? "white" : "#16a34a", fontSize: "12px", fontWeight: 700 }}>{t('pos.cash')}</span>
                 </button>
                 <button onClick={() => setPaymentMethod("bank")} className="flex items-center justify-center gap-2 py-3 rounded-xl transition-all" style={{ background: paymentMethod === "bank" ? "linear-gradient(135deg, #3b82f6, #2563eb)" : "rgba(255,255,255,0.6)", border: `2px solid ${paymentMethod === "bank" ? "#2563eb" : "rgba(59,130,246,0.3)"}`, boxShadow: paymentMethod === "bank" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}>
-                  <QrCode size={16} color={paymentMethod === "bank" ? "white" : "#2563eb"} /><span style={{ color: paymentMethod === "bank" ? "white" : "#2563eb", fontSize: "12px", fontWeight: 700 }}>QR Ngân hàng</span>
+                  <QrCode size={16} color={paymentMethod === "bank" ? "white" : "#2563eb"} /><span style={{ color: paymentMethod === "bank" ? "white" : "#2563eb", fontSize: "12px", fontWeight: 700 }}>{t('pos.bank_qr')}</span>
                 </button>
               </div>
 
               <button onClick={handlePayment} disabled={cart.length === 0 || !paymentMethod} className="w-full py-4 rounded-2xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-lg" style={{ background: cart.length > 0 && paymentMethod ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "rgba(200,190,190,0.3)", boxShadow: cart.length > 0 && paymentMethod ? "0 10px 25px rgba(212,175,55,0.35)" : "none", cursor: cart.length > 0 && paymentMethod ? "pointer" : "not-allowed" }}>
                 <CreditCard size={18} color={cart.length > 0 && paymentMethod ? "white" : "#aaa"} />
-                <span style={{ color: cart.length > 0 && paymentMethod ? "white" : "#aaa", fontSize: "14px", fontWeight: 700 }}>Thanh toán {total.toFixed(2)} ₫</span>
+                <span style={{ color: cart.length > 0 && paymentMethod ? "white" : "#aaa", fontSize: "14px", fontWeight: 700 }}>{t('pos.pay')} {total.toFixed(2)} ₫</span>
               </button>
 
               <button onClick={handlePrintReceipt} className="w-full mt-2 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all hover:bg-yellow-50/50 hover:scale-[1.02] active:scale-[0.98] cursor-pointer" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)" }}>
-                <Printer size={16} color="#D4AF37" /><span style={{ color: "#92740d", fontSize: "13px", fontWeight: 600 }}>In hóa đơn</span>
+                <Printer size={16} color="#D4AF37" /><span style={{ color: "#92740d", fontSize: "13px", fontWeight: 600 }}>{t('pos.print_receipt')}</span>
               </button>
             </div>
           </>
@@ -748,10 +750,10 @@ export function POS() {
                       </div>
                       <div className="flex-1">
                         <p style={{ color: "#3d1a2e", fontSize: "12px", fontWeight: 700, lineHeight: 1.2 }}>{item.name}</p>
-                        <p style={{ color: "#9d6b7a", fontSize: "10px", marginTop: 2 }}>Tồn kho: <strong className={item.stock === 0 ? "text-red-500" : ""}>{item.stock}</strong></p>
+                        <p style={{ color: "#9d6b7a", fontSize: "10px", marginTop: 2 }}>{language === 'vi' ? 'Tồn kho' : 'Stock'}: <strong className={item.stock === 0 ? "text-red-500" : ""}>{item.stock}</strong></p>
                         
                         <div className="flex items-center gap-2 mt-2">
-                          <span style={{ fontSize: "11px", color: "#666" }}>Xin nhập:</span>
+                          <span style={{ fontSize: "11px", color: "#666" }}>{language === 'vi' ? 'Xin nhập' : 'Qty'}:</span>
                           <div className="flex items-center rounded-md border border-gray-200 overflow-hidden bg-gray-50">
                             <button onClick={() => updateRefillQty(item.id, -1)} className="px-2 py-1 hover:bg-gray-200"><Minus size={10} /></button>
                             <input
@@ -779,12 +781,12 @@ export function POS() {
 
             <div className="p-4 border-t bg-gray-50">
                <label className="flex items-center gap-1.5 mb-2" style={{ color: "#3d1a2e", fontSize: "12px", fontWeight: 600 }}>
-                 <MessageSquare size={14} color="#D4AF37"/> Ghi chú (Lý do)
+                 <MessageSquare size={14} color="#D4AF37"/> {language === 'vi' ? 'Ghi chú (Lý do)' : 'Note (Reason)'}
                </label>
                <textarea 
                   value={refillNote}
                   onChange={e => setRefillNote(e.target.value)}
-                  placeholder="VD: Khách dặn mua, Cần cho cuối tuần..."
+                  placeholder={language === 'vi' ? 'VD: Khách dặn mua, Cần cho cuối tuần...' : 'e.g. Customer request, Weekend stock...'}
                   className="w-full p-2 rounded-lg border border-gray-200 outline-none text-[12px] mb-3 resize-none h-16"
                />
                <button
@@ -793,7 +795,7 @@ export function POS() {
                 className="w-full py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all"
                 style={{ background: refillCart.length > 0 ? "#dc2626" : "#ccc", color: "white", fontSize: "14px", fontWeight: 700 }}
               >
-                <Send size={16} /> Gửi Phiếu Yêu Cầu
+                <Send size={16} /> {language === 'vi' ? 'Gửi Phiếu Yêu Cầu' : 'Send Request'}
               </button>
             </div>
           </div>
@@ -809,7 +811,7 @@ export function POS() {
           >
             <div className="flex items-center gap-2 justify-center mb-4">
               <QrCode size={20} color="#D4AF37" />
-              <h2 style={{ color: "#3d1a2e", fontSize: "16px", fontWeight: 700 }}>Chuyển khoản Ngân hàng</h2>
+              <h2 style={{ color: "#3d1a2e", fontSize: "16px", fontWeight: 700 }}>{language === 'vi' ? 'Chuyển khoản Ngân hàng' : 'Bank Transfer'}</h2>
             </div>
             <div
               className="w-44 h-44 rounded-2xl overflow-hidden mx-auto mb-4"
@@ -839,7 +841,7 @@ export function POS() {
                 cursor: isProcessing ? "not-allowed" : "pointer"
               }}
             >
-              {isProcessing ? "Đang kết nối CSDL..." : "✓ Xác nhận đã nhận thanh toán"}
+              {isProcessing ? (language === 'vi' ? 'Đang kết nối CSDL...' : 'Connecting DB...') : (language === 'vi' ? '✓ Xác nhận đã nhận thanh toán' : '✓ Confirm Payment Received')}
             </button>
 
             <button

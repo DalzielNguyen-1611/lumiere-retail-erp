@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useLanguage } from "../context/LanguageContext";
 import { Search, Plus, AlertTriangle, Package, X, ShoppingCart, Trash2, Minus, Sparkles, AlertCircle } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 
@@ -26,6 +27,7 @@ const getImageUrl = (imagePath: string) => {
 };
 
 export function Inventory() {
+  const { t, language } = useLanguage();
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -145,10 +147,10 @@ export function Inventory() {
       else if (p.status === "Out of Stock") outOfStock++;
     });
     return [
-      { label: "Tổng mặt hàng", value: products.length.toString(), icon: Package, color: "#D4AF37" },
-      { label: "Đang kinh doanh", value: inStock.toString(), icon: Package, color: "#4ade80" },
-      { label: "Sắp hết hàng", value: lowStock.toString(), icon: AlertTriangle, color: "#D4AF37" },
-      { label: "Hết hàng", value: outOfStock.toString(), icon: AlertTriangle, color: "#f43f5e" },
+      { label: t("inv.total_items"), value: products.length.toString(), icon: Package, color: "#D4AF37" },
+      { label: t("inv.active"), value: inStock.toString(), icon: Package, color: "#4ade80" },
+      { label: t("inv.low_stock_status"), value: lowStock.toString(), icon: AlertTriangle, color: "#D4AF37" },
+      { label: t("inv.out_of_stock_status"), value: outOfStock.toString(), icon: AlertTriangle, color: "#f43f5e" },
     ];
   }, [products]);
 
@@ -168,11 +170,11 @@ export function Inventory() {
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} color="#D4AF37" />
             <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>
-              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {currentTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
           <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-            Kho Hàng & Sản Phẩm
+            {t('inv.title')}
           </h1>
         </div>
         
@@ -184,7 +186,7 @@ export function Inventory() {
             style={{ background: "white", border: "1px solid rgba(212,175,55,0.4)", color: "#92740d", fontSize: "14px", fontWeight: 700 }}
           >
             <ShoppingCart size={18} /> 
-            Giỏ hàng nhập
+            {language === 'vi' ? 'Giỏ hàng nhập' : 'Refill Cart'}
             {refillCart.length > 0 && (
               <span className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-black text-white shadow-lg" style={{ background: "#dc2626" }}>
                 {refillCart.length}
@@ -198,7 +200,7 @@ export function Inventory() {
             className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer"
             style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}
           >
-            <Plus size={18} /> Thêm sản phẩm
+            <Plus size={18} /> {t('inv.add_product')}
           </button>
         </div>
       </div>
@@ -232,7 +234,7 @@ export function Inventory() {
             <table className="w-full min-w-[800px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
-                  {["Sản phẩm", "Danh mục", "Giá bán", "Tồn kho", "Trạng thái", ""].map((h, index) => (
+                  {[t('part.title'), t('inv.category'), t('inv.price'), t('inv.stock'), t('inv.stock_status'), ""].map((h, index) => (
                     <th key={index} style={{ color: "#9d6b7a", fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", padding: "10px 12px", textAlign: h === "" ? "right" : "left" }}>
                       {h.toUpperCase()}
                     </th>

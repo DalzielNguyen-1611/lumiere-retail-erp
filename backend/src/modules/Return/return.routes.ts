@@ -13,6 +13,44 @@ const dbConfig = {
 };
 
 // ============================================================================
+// 0. LẤY DANH SÁCH HÓA ĐƠN BÁN HÀNG GẦN ĐÂY THỰC TẾ
+// ============================================================================
+router.get('/invoices/recent', async (req: Request, res: Response): Promise<any> => {
+  let connection;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const result = await connection.execute(`
+      SELECT 
+        'INV-' || dh.MADONHANG AS "id", 
+        NVL(dt.TENDOITAC, 'Khách vãng lai') AS "customer", 
+        NVL(dt.SODIENTHOAI, 'N/A') AS "phone",
+        TO_CHAR(dh.NGAYTAO, 'YYYY-MM-DD HH24:MI:SS') AS "date", 
+        dh.TONGTIENTAMTINH AS "total",
+        (SELECT COUNT(*) FROM CHI_TIET_DON_HANG WHERE MADONHANG = dh.MADONHANG) AS "itemsCount",
+        CASE 
+          WHEN (SELECT SUM(SOLUONG) FROM CHI_TIET_DON_HANG WHERE MADONHANG = dh.MADONHANG) <= 
+               (SELECT NVL(SUM(ctdt.SOLUONG_TRA), 0) 
+                FROM CHI_TIET_DOI_TRA ctdt 
+                JOIN PHIEU_DOI_TRA pdt ON ctdt.MAPHIEU = pdt.MAPHIEU 
+                WHERE pdt.MADONHANG = dh.MADONHANG AND pdt.TRANG_THAI != 'Từ chối')
+          THEN 1 
+          ELSE 0 
+        END AS "isFullyReturned"
+      FROM DON_HANG dh 
+      LEFT JOIN DOI_TAC dt ON dh.MADOITAC = dt.MADOITAC
+      ORDER BY dh.NGAYTAO DESC
+      FETCH FIRST 10 ROWS ONLY
+    `, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    
+    res.json({ status: 'success', data: result.rows || [] });
+  } catch (err: any) { 
+    res.status(500).json({ status: 'error', message: err.message }); 
+  } finally { 
+    if (connection) await connection.close(); 
+  }
+});
+
+// ============================================================================
 // 1. LẤY THÔNG TIN HÓA ĐƠN GỐC
 // ============================================================================
 router.get('/invoice/:id', async (req: Request, res: Response): Promise<any> => {
@@ -33,8 +71,23 @@ router.get('/invoice/:id', async (req: Request, res: Response): Promise<any> => 
     if (orderRows.length === 0) return res.status(404).json({ status: 'not_found', message: 'Không tìm thấy hóa đơn này' });
 
     const itemsResult = await connection.execute(`
-      SELECT sp.MASANPHAM AS "id", sp.TENSANPHAM AS "name", sp.MAVACH AS "sku", ct.DONGIA AS "price", ct.SOLUONG AS "qty", sp.HINHANH AS "img"
-      FROM CHI_TIET_DON_HANG ct JOIN SAN_PHAM sp ON ct.MASANPHAM = sp.MASANPHAM WHERE ct.MADONHANG = :id
+      SELECT 
+        sp.MASANPHAM AS "id", 
+        sp.TENSANPHAM AS "name", 
+        sp.MAVACH AS "sku", 
+        ct.DONGIA AS "price", 
+        GREATEST(ct.SOLUONG - NVL((
+          SELECT SUM(ctdt.SOLUONG_TRA)
+          FROM CHI_TIET_DOI_TRA ctdt
+          JOIN PHIEU_DOI_TRA pdt ON ctdt.MAPHIEU = pdt.MAPHIEU
+          WHERE pdt.MADONHANG = ct.MADONHANG 
+            AND ctdt.MASANPHAM_TRA = ct.MASANPHAM
+            AND pdt.TRANG_THAI != 'Từ chối'
+        ), 0), 0) AS "qty",
+        sp.HINHANH AS "img"
+      FROM CHI_TIET_DON_HANG ct 
+      JOIN SAN_PHAM sp ON ct.MASANPHAM = sp.MASANPHAM 
+      WHERE ct.MADONHANG = :id
     `, [madonhang], { outFormat: oracledb.OUT_FORMAT_OBJECT });
 
     res.json({ status: 'success', data: { customer: orderRows[0].customer || 'Khách vãng lai', date: orderRows[0].date, items: itemsResult.rows || [] } });
@@ -56,13 +109,49 @@ router.post('/', async (req: Request, res: Response): Promise<any> => {
     connection = await oracledb.getConnection(dbConfig);
     connection.autoCommit = false;
 
+    // Kiểm tra giới hạn số lượng có thể trả cho từng sản phẩm
+    for (const item of items) {
+      if (item.returnQty > 0) {
+        const checkRes = await connection.execute(`
+          SELECT 
+            ct.SOLUONG AS "purchasedQty",
+            NVL((
+              SELECT SUM(ctdt.SOLUONG_TRA)
+              FROM CHI_TIET_DOI_TRA ctdt
+              JOIN PHIEU_DOI_TRA pdt ON ctdt.MAPHIEU = pdt.MAPHIEU
+              WHERE pdt.MADONHANG = ct.MADONHANG 
+                AND ctdt.MASANPHAM_TRA = ct.MASANPHAM
+                AND pdt.TRANG_THAI != 'Từ chối'
+            ), 0) AS "alreadyReturned"
+          FROM CHI_TIET_DON_HANG ct
+          WHERE ct.MADONHANG = :madh AND ct.MASANPHAM = :masp
+        `, { madh: madonhang, masp: item.id }, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+
+        const checkRow = (checkRes.rows as any[])[0];
+        if (!checkRow) {
+          return res.status(400).json({ status: 'error', message: `Sản phẩm ${item.name || ''} không nằm trong hóa đơn mua hàng gốc!` });
+        }
+
+        const remaining = checkRow.purchasedQty - checkRow.alreadyReturned;
+        if (item.returnQty > remaining) {
+          return res.status(400).json({ 
+            status: 'error', 
+            message: `Sản phẩm "${item.name}" đã được làm thủ tục trả trước đó. Số lượng tối đa có thể trả thêm là ${remaining} (Bạn yêu cầu: ${item.returnQty}).` 
+          });
+        }
+      }
+    }
+
+    const restockMap = items.filter((i: any) => i.returnQty > 0).map((i: any) => `${i.id}:${i.restock}`).join(',');
+    const serializedReason = `${reason || 'Chờ xác nhận'} [Restock:${restockMap}]`;
+
     const insertPhieu = `
       INSERT INTO PHIEU_DOI_TRA (MADONHANG, MACUAHANG, MADOITAC, MANHANVIEN_TAO, LOAI_PHIEU, TRANG_THAI, TONGTIEN_HOAN, LYDO)
       VALUES (:madh, 1, 1, 1, 'Trả hàng', 'Chờ duyệt', :tienhoan, :lydo)
       RETURNING MAPHIEU INTO :maphieu
     `;
     const resultPhieu = await connection.execute(insertPhieu, {
-      madh: madonhang, tienhoan: totalRefund, lydo: reason || 'Chờ xác nhận', maphieu: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+      madh: madonhang, tienhoan: totalRefund, lydo: serializedReason, maphieu: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
     });
     
     const outBinds = resultPhieu.outBinds as any;
@@ -93,34 +182,16 @@ router.put('/:id/approve', async (req: Request, res: Response): Promise<any> => 
   try {
     const maphieu = String(req.params.id).replace(/\D/g, '');
     connection = await oracledb.getConnection(dbConfig);
-    connection.autoCommit = false;
 
-    const phieuRes = await connection.execute(`SELECT TONGTIEN_HOAN, MADONHANG FROM PHIEU_DOI_TRA WHERE MAPHIEU = :id`, [maphieu], { outFormat: oracledb.OUT_FORMAT_OBJECT });
-    const phieu = (phieuRes.rows as any[])[0];
+    // Thực thi stored procedure duyệt đổi trả đã đồng bộ hóa tài sản/nợ/kho hàng dưới database
+    await connection.execute(
+      `BEGIN SP_DUYET_PHIEU_DOI_TRA(:id); END;`,
+      { id: Number(maphieu) },
+      { autoCommit: true }
+    );
 
-    if (!phieu) return res.status(404).json({ status: 'error', message: 'Không tìm thấy phiếu' });
-
-    const itemsRes = await connection.execute(`SELECT MASANPHAM_TRA, SOLUONG_TRA FROM CHI_TIET_DOI_TRA WHERE MAPHIEU = :id`, [maphieu], { outFormat: oracledb.OUT_FORMAT_OBJECT });
-    const items = itemsRes.rows as any[];
-    
-    // Cộng kho (Mặc định kho 1)
-    for(const item of items) {
-      await connection.execute(`UPDATE TON_KHO SET SOLUONGTON = SOLUONGTON + :sl WHERE MASANPHAM = :masp AND MAKHO = 1`, { sl: item.SOLUONG_TRA, masp: item.MASANPHAM_TRA });
-    }
-
-    // Trừ sổ quỹ
-    await connection.execute(`
-      INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
-      VALUES (1, 111, 'Chi tiền mặt', :tien, SYSTIMESTAMP, :ghichu)
-    `, { tien: -phieu.TONGTIEN_HOAN, ghichu: `Hoàn tiền khách trả hàng (Phiếu RET-${maphieu}, HĐ INV-${phieu.MADONHANG})` });
-
-    // Đổi trạng thái -> Đã hoàn tất
-    await connection.execute(`UPDATE PHIEU_DOI_TRA SET TRANG_THAI = 'Đã hoàn tất' WHERE MAPHIEU = :id`, [maphieu]);
-
-    await connection.commit();
-    res.json({ status: 'success', message: 'Đã duyệt và hoàn tiền thành công!' });
+    res.json({ status: 'success', message: 'Đã duyệt yêu cầu đổi trả và ghi nhận bút toán kế toán kép qua database procedure thành công!' });
   } catch (err: any) {
-    if (connection) await connection.rollback();
     res.status(500).json({ status: 'error', message: err.message });
   } finally { if (connection) await connection.close(); }
 });

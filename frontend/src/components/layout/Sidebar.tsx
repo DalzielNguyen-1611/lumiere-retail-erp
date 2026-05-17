@@ -6,6 +6,7 @@ import {
   Wallet, Store, PieChart, CornerUpLeft, Truck // THÊM CÁC ICON NÀY
 } from "lucide-react";
 import { useAuth, roleConfig, type UserRole } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 // ─── Nav Item Types ───────────────────────────────────────────────────────────
 interface NavItemDef {
@@ -16,22 +17,22 @@ interface NavItemDef {
   roles: UserRole[];
 }
 
-const mainNavItems: NavItemDef[] = [
-  { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["admin", "manager", "accounting", "warehouse"] },
-  { path: "/pos", icon: Monitor, label: "Bán hàng (POS)", roles: ["admin", "sales"] },
-  { path: "/customers", icon: Users, label: "Đối tác", roles: ["admin", "manager", "sales", "accounting"] },
-  { path: "/inventory", icon: Package, label: "Tồn kho", roles: ["admin", "manager", "warehouse", "accounting"] },
-  { path: "/returns", icon: CornerUpLeft, label: "Đổi trả", roles: ["admin", "manager", "sales", "warehouse", "accounting"] },
-  { path: "/logistics", icon: Truck, label: "Phiếu kho", roles: ["admin", "warehouse"] },
-  { path: "/time-management", icon: Clock, label: "Chấm công & Phép", roles: ["admin", "manager", "sales", "warehouse", "accounting"] },
+const mainNavItems: (NavItemDef & { tKey: string })[] = [
+  { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tKey: "nav.dashboard", roles: ["admin", "manager", "accounting", "warehouse"] },
+  { path: "/pos", icon: Monitor, label: "Bán hàng (POS)", tKey: "nav.pos", roles: ["admin", "sales"] },
+  { path: "/customers", icon: Users, label: "Đối tác", tKey: "nav.customers", roles: ["admin", "manager", "sales", "accounting"] },
+  { path: "/inventory", icon: Package, label: "Tồn kho", tKey: "nav.inventory", roles: ["admin", "manager", "warehouse", "accounting"] },
+  { path: "/returns", icon: CornerUpLeft, label: "Đổi trả", tKey: "nav.returns", roles: ["admin", "manager", "sales", "warehouse", "accounting"] },
+  { path: "/logistics", icon: Truck, label: "Phiếu kho", tKey: "nav.logistics", roles: ["admin", "warehouse"] },
+  { path: "/time-management", icon: Clock, label: "Chấm công & Phép", tKey: "nav.time_management", roles: ["admin", "manager", "sales", "warehouse", "accounting"] },
 ];
 
-const opsNavItems: NavItemDef[] = [
-  { path: "/finance", icon: PieChart, label: "Thu chi", roles: ["admin", "accounting", "manager"] },
-  { path: "/procurement", icon: ShoppingBag, label: "Mua hàng", roles: ["admin", "accounting", "manager", "warehouse"] },
-  { path: "/hr", icon: UserCog, label: "Nhân sự", roles: ["admin", "accounting", "manager"] },
-  { path: "/multi-store", icon: Store, label: "Chi nhánh", roles: ["admin", "manager", "warehouse"] },
-  { path: "/settings", icon: Settings2, label: "Cài đặt", roles: ["admin", "manager", "sales", "warehouse", "accounting"] },
+const opsNavItems: (NavItemDef & { tKey: string })[] = [
+  { path: "/finance", icon: PieChart, label: "Thu chi", tKey: "nav.finance", roles: ["admin", "accounting", "manager"] },
+  { path: "/procurement", icon: ShoppingBag, label: "Mua hàng", tKey: "nav.procurement", roles: ["admin", "accounting", "manager", "warehouse"] },
+  { path: "/hr", icon: UserCog, label: "Nhân sự", tKey: "nav.hr", roles: ["admin", "accounting", "manager"] },
+  { path: "/multi-store", icon: Store, label: "Chi nhánh", tKey: "nav.multi_store", roles: ["admin", "manager", "warehouse"] },
+  { path: "/settings", icon: Settings2, label: "Cài đặt", tKey: "nav.settings", roles: ["admin", "manager", "sales", "warehouse", "accounting"] },
 ];
 
 // Cập nhật đủ icon cho các Role (Tránh lỗi undefined)
@@ -46,7 +47,8 @@ const roleIcons: Record<UserRole, React.ElementType> = {
 
 // Đưa NavItem ra ngoài để tránh Re-mount component (Sửa lỗi giật/mất trạng thái)
 const NavItem = ({ item, isActive }: { item: NavItemDef; isActive: boolean }) => {
-  const { path, icon: Icon, label, badge } = item;
+  const { t } = useLanguage();
+  const { path, icon: Icon, label, badge, tKey } = item as any;
   return (
     <NavLink
       to={path}
@@ -81,7 +83,7 @@ const NavItem = ({ item, isActive }: { item: NavItemDef; isActive: boolean }) =>
           letterSpacing: "0.01em",
         }}
       >
-        {label}
+        {t(tKey) || label}
       </span>
       <div className="flex items-center gap-1 shrink-0">
         {badge && (
@@ -108,6 +110,7 @@ const NavItem = ({ item, isActive }: { item: NavItemDef; isActive: boolean }) =>
 };
 
 export function Sidebar() {
+  const { language, t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -177,7 +180,7 @@ export function Sidebar() {
         >
           <RoleIcon size={12} color={colorTheme} strokeWidth={2.5} />
           <span style={{ color: colorTheme, fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.04em" }}>
-            {roleLabel}
+            {language === 'vi' ? roleLabelVi.toUpperCase() : roleLabel}
           </span>
           {/* Sửa lại truy cập thuộc tính an toàn bằng "as any" tạm thời hoặc kiểm tra tồn tại */}
           {(user as any)?.branch && (
@@ -207,7 +210,7 @@ export function Sidebar() {
             paddingLeft: "10px",
           }}
         >
-          MAIN MENU
+          {t('nav.menu_main')}
         </p>
         <div className="space-y-0.5">
           {visibleMain.map((item) => (
@@ -232,7 +235,7 @@ export function Sidebar() {
                 paddingLeft: "10px",
               }}
             >
-              OPERATIONS
+              {t('nav.menu_ops')}
             </p>
             <div className="space-y-0.5">
               {visibleOps.map((item) => (
@@ -267,7 +270,7 @@ export function Sidebar() {
             <span
               style={{ color: "rgba(255,255,255,0.45)", fontSize: "12.5px", fontWeight: 400 }}
             >
-              Đăng xuất
+              {t('common.logout')}
             </span>
           </button>
         </div>
@@ -290,15 +293,15 @@ export function Sidebar() {
             }}
           >
             <span style={{ color: "white", fontSize: "10px", fontWeight: 800 }}>
-              {(user as any)?.initials ?? "?"}
+              {(user as any)?.initials ?? (user as any)?.username?.substring(0, 2)?.toUpperCase() ?? "?"}
             </span>
           </div>
           <div className="flex-1 min-w-0">
             <p style={{ color: "white", fontSize: "12.5px", fontWeight: 600 }}>
-              {(user as any)?.name ?? "Guest"}
+              {(user as any)?.name === "Quản trị viên" && language === 'en' ? "Administrator" : ((user as any)?.name ?? (user as any)?.username ?? "Guest")}
             </p>
             <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "10px" }}>
-              {roleLabelVi}
+              {language === 'vi' ? roleLabelVi : roleLabel}
             </p>
           </div>
           <div

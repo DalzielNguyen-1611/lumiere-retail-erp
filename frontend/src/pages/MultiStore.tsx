@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Building2, MapPin, Sparkles, Plus, Users, Warehouse, Phone, ChevronRight, X, AlertCircle } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 const glassCard = { background: "rgba(255,255,255,0.72)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(61,26,46,0.06)", borderRadius: "20px" };
 
@@ -15,6 +16,7 @@ interface Branch {
 }
 
 export function MultiStore() {
+  const { t, language } = useLanguage();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,7 +41,7 @@ export function MultiStore() {
         }
       }
     } catch (err) {
-      setToast({ message: "Không thể kết nối với máy chủ", type: "error" });
+      setToast({ message: language === 'vi' ? "Không thể kết nối với máy chủ" : "Unable to connect to server", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -59,7 +61,7 @@ export function MultiStore() {
               {toast.type === "error" ? <AlertCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
             </div>
             <div>
-              <p className="font-bold text-[15px]">{toast.type === "success" ? "Thành công" : "Thông báo"}</p>
+              <p className="font-bold text-[15px]">{toast.type === "success" ? (language === 'vi' ? "Thành công" : "Success") : (language === 'vi' ? "Thông báo" : "Notification")}</p>
               <p className="text-white/80 text-[13px] mt-0.5">{toast.message}</p>
             </div>
             <button onClick={() => setToast(null)} className="ml-auto text-white/40 hover:text-white transition-colors">
@@ -75,17 +77,17 @@ export function MultiStore() {
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} color="#D4AF37" />
             <p className="text-[#9d6b7a] text-[13px] font-medium uppercase tracking-widest">
-              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {currentTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
-          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>Hệ Thống Chi Nhánh</h1>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>{t('store.title')}</h1>
         </div>
         <button 
-          onClick={() => setToast({ message: "Tính năng thêm chi nhánh đang được hoàn thiện", type: "success" })}
+          onClick={() => setToast({ message: t('store.add_coming'), type: "success" })}
           className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer"
           style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}
         >
-          <Plus size={18} /> Thêm Chi Nhánh
+          <Plus size={18} /> {t('store.add')}
         </button>
       </div>
 
@@ -112,7 +114,7 @@ export function MultiStore() {
                   <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center shadow-sm">
                     <Building2 size={24} color="#D4AF37" />
                   </div>
-                  <div className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Hoạt động</div>
+                  <div className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">{t('store.active')}</div>
                 </div>
                 
                 <h3 className="text-[#3d1a2e] font-bold text-[18px] mb-1">{b.name}</h3>
@@ -122,12 +124,12 @@ export function MultiStore() {
 
                 <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-amber-100/50">
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-[#9d6b7a] uppercase font-bold tracking-tighter">Nhân sự</span>
-                    <span className="text-[16px] font-black text-[#3d1a2e]">{b.staffCount} <span className="text-[10px] font-normal">thành viên</span></span>
+                    <span className="text-[10px] text-[#9d6b7a] uppercase font-bold tracking-tighter">{t('store.staff')}</span>
+                    <span className="text-[16px] font-black text-[#3d1a2e]">{b.staffCount} <span className="text-[10px] font-normal">{t('store.staff_member')}</span></span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-[#9d6b7a] uppercase font-bold tracking-tighter">Kho bãi</span>
-                    <span className="text-[16px] font-black text-[#3d1a2e]">{b.warehouseCount} <span className="text-[10px] font-normal">địa điểm</span></span>
+                    <span className="text-[10px] text-[#9d6b7a] uppercase font-bold tracking-tighter">{t('store.warehouse')}</span>
+                    <span className="text-[16px] font-black text-[#3d1a2e]">{b.warehouseCount} <span className="text-[10px] font-normal">{t('store.warehouse_location')}</span></span>
                   </div>
                 </div>
               </div>
@@ -141,25 +143,25 @@ export function MultiStore() {
                 <div className="flex-1 space-y-6">
                   <div>
                     <h2 className="text-[#3d1a2e] text-[20px] font-bold mb-6 flex items-center gap-2">
-                      Chi tiết: {activeBranch.name}
+                      {t('store.details')}: {activeBranch.name}
                     </h2>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-1">
-                        <p className="text-[#9d6b7a] text-[11px] font-bold uppercase">Quản lý trực tiếp</p>
+                        <p className="text-[#9d6b7a] text-[11px] font-bold uppercase">{t('store.manager')}</p>
                         <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/40 border border-white">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#C9A94E] flex items-center justify-center text-white font-bold text-[14px]">
                             {activeBranch.managerName?.charAt(0) || "M"}
                           </div>
                           <div>
-                            <p className="text-[#3d1a2e] font-bold text-[14px]">{activeBranch.managerName || "Chưa gán quản lý"}</p>
+                            <p className="text-[#3d1a2e] font-bold text-[14px]">{activeBranch.managerName || t('store.no_manager')}</p>
                             <p className="text-[#9d6b7a] text-[12px]">ID: {activeBranch.managerId}</p>
                           </div>
                         </div>
                       </div>
 
                       <div className="space-y-1">
-                        <p className="text-[#9d6b7a] text-[11px] font-bold uppercase">Thông tin liên lạc</p>
+                        <p className="text-[#9d6b7a] text-[11px] font-bold uppercase">{t('store.contact')}</p>
                         <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/40 border border-white h-[74px]">
                           <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
                             <Phone size={18} color="#D4AF37" />
@@ -171,15 +173,15 @@ export function MultiStore() {
                   </div>
 
                   <div className="pt-4">
-                    <p className="text-[#9d6b7a] text-[11px] font-bold uppercase mb-4">Các hoạt động gần đây</p>
+                    <p className="text-[#9d6b7a] text-[11px] font-bold uppercase mb-4">{t('store.recent_activities')}</p>
                     <div className="space-y-3">
                       {[1, 2].map((i) => (
                         <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/30 border border-white/50 hover:bg-white/50 transition-colors cursor-pointer group">
                           <div className="flex items-center gap-3">
                             <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
-                            <p className="text-[13px] text-[#3d1a2e]">Đã đồng bộ tồn kho từ Kho Tổng</p>
+                            <p className="text-[13px] text-[#3d1a2e]">{t('store.sync_msg')}</p>
                           </div>
-                          <span className="text-[11px] text-[#9d6b7a] group-hover:text-[#3d1a2e] transition-colors">15 phút trước</span>
+                          <span className="text-[11px] text-[#9d6b7a] group-hover:text-[#3d1a2e] transition-colors">{t('store.minutes_ago')}</span>
                         </div>
                       ))}
                     </div>
@@ -188,17 +190,17 @@ export function MultiStore() {
 
                 <div className="w-full md:w-80 space-y-4">
                   <button className="w-full py-4 rounded-2xl bg-white border border-amber-200 text-[#3d1a2e] font-bold text-[13px] shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
-                    <Users size={16} /> Quản lý nhân sự
+                    <Users size={16} /> {t('store.manage_staff')}
                   </button>
                   <button className="w-full py-4 rounded-2xl bg-white border border-amber-200 text-[#3d1a2e] font-bold text-[13px] shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
-                    <Warehouse size={16} /> Xem sơ đồ kho
+                    <Warehouse size={16} /> {t('store.view_layout')}
                   </button>
                   <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 mt-4">
                     <div className="flex items-center gap-2 text-amber-700 font-bold text-[12px] mb-2">
-                      <Sparkles size={14} /> Hệ thống gợi ý
+                      <Sparkles size={14} /> {t('store.recommendation')}
                     </div>
                     <p className="text-amber-800/70 text-[11px] leading-relaxed">
-                      Chi nhánh này đang có hiệu suất cao hơn 15% so với cùng kỳ tháng trước. Nên cân nhắc mở rộng thêm kho bãi.
+                      {t('store.recommendation_msg')}
                     </p>
                   </div>
                 </div>

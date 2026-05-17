@@ -1,11 +1,13 @@
 // File: src/pages/Logistics.tsx
 import React, { useState, useEffect } from "react";
-import { ArrowRight, CheckCircle2, Plus, Clock, PackageCheck, XCircle, FileText, Search, X, Sparkles } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
+import { ArrowRight, CheckCircle2, Plus, Clock, PackageCheck, XCircle, FileText, Search, X, Sparkles, AlertCircle } from "lucide-react";
 
 const glassCard = { background: "rgba(255,255,255,0.72)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(61,26,46,0.06)", borderRadius: "20px" };
 const BACKEND_URL = "http://localhost:5000";
 
 export function Logistics() {
+  const { t, language } = useLanguage();
   const [receipts, setReceipts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,7 +44,7 @@ export function Logistics() {
         setReceipts(json.data);
       }
     } catch (error) {
-      showToast("Lỗi tải dữ liệu phiếu kho!", "error");
+      showToast(t('log.err_load'), "error");
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +71,7 @@ export function Logistics() {
   const handleCreateTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!transferForm.fromId || !transferForm.toId || !transferForm.productId) {
-      showToast("Vui lòng nhập đầy đủ thông tin!", "error");
+      showToast(t('log.err_full_info'), "error");
       return;
     }
     setIsTransferring(true);
@@ -87,14 +89,14 @@ export function Logistics() {
       });
       const json = await res.json();
       if (json.status === "success") {
-        showToast("Tạo phiếu chuyển kho thành công!", "success");
+        showToast(t('log.success_transfer'), "success");
         setIsTransferModalOpen(false);
         fetchReceipts();
       } else {
         showToast(json.message, "error");
       }
     } catch (e) {
-      showToast("Lỗi kết nối server!", "error");
+      showToast(t('log.err_connection'), "error");
     } finally {
       setIsTransferring(false);
     }
@@ -107,14 +109,14 @@ export function Logistics() {
       const res = await fetch(`${BACKEND_URL}/api/logistics/approve/${confirmModal.ticketCode}`, { method: 'PUT' });
       const json = await res.json();
       if (json.status === 'success') {
-        showToast("Đã duyệt nhập kho thành công! Tồn kho đã được cộng.", "success");
+        showToast(t('log.success_approve'), "success");
         fetchReceipts();
         setConfirmModal({ isOpen: false, ticketCode: "" }); // Đóng modal khi xong
       } else {
         showToast(json.message, "error");
       }
     } catch (error) {
-      showToast("Lỗi xử lý duyệt kho!", "error");
+      showToast(t('log.err_approve'), "error");
     } finally {
       setIsApproving(false);
     }
@@ -132,29 +134,29 @@ export function Logistics() {
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} color="#D4AF37" />
             <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {currentTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
-          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>Quản Lý Phiếu Kho</h1>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>{t('log.title')}</h1>
         </div>
         <button 
           onClick={() => setIsTransferModalOpen(true)}
           className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer" 
           style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}
         >
-          <Plus size={18}/> Tạo Phiếu Xuất/Chuyển Kho
+          <Plus size={18}/> {language === 'vi' ? 'Tạo Phiếu Xuất/Chuyển Kho' : 'Create Inventory Ticket'}
         </button>
       </div>
 
       <div style={glassCard} className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[#3d1a2e] text-[16px] font-bold">Lịch Sử Phiếu Kho (Nhập/Xuất)</h2>
+          <h2 className="text-[#3d1a2e] text-[16px] font-bold">{language === 'vi' ? 'Lịch Sử Phiếu Kho (Nhập/Xuất)' : 'Inventory History (In/Out)'}</h2>
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#D4AF37]/20 shadow-sm w-80">
             <Search size={16} color="#9d6b7a"/>
             <input 
               value={searchQuery} 
               onChange={e => setSearchQuery(e.target.value)} 
-              placeholder="Tìm theo mã phiếu, đối tác..." 
+              placeholder={language === 'vi' ? 'Tìm theo mã phiếu, đối tác...' : 'Search by ticket code, partner...'} 
               className="bg-transparent outline-none text-[13px] w-full text-[#3d1a2e]"
             />
           </div>
@@ -164,20 +166,20 @@ export function Logistics() {
           <table className="w-full text-left">
             <thead>
               <tr className="text-[#9d6b7a] text-[11px] font-bold uppercase tracking-wider border-b border-[#D4AF37]/10 bg-[#D4AF37]/5">
-                <th className="py-4 px-4 rounded-tl-xl">Mã Phiếu</th>
-                <th className="px-3">Loại Phiếu</th>
-                <th className="px-3">Từ (Nguồn)</th>
-                <th className="px-3">Đến (Đích)</th>
-                <th className="px-3">Ngày Lập</th>
-                <th className="px-3 text-right">Tổng Giá Trị</th>
-                <th className="px-4 text-center rounded-tr-xl">Hành Động / Trạng Thái</th>
+                <th className="py-4 px-4 rounded-tl-xl">{t('log.code')}</th>
+                <th className="px-3">{t('log.type')}</th>
+                <th className="px-3">{t('log.source')}</th>
+                <th className="px-3">{t('log.destination')}</th>
+                <th className="px-3">{t('log.date')}</th>
+                <th className="px-3 text-right">{t('log.total_value')}</th>
+                <th className="px-4 text-center rounded-tr-xl">{t('log.action_status')}</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={7} className="py-10 text-center text-[#9d6b7a]">Đang tải dữ liệu phiếu kho...</td></tr>
+                <tr><td colSpan={7} className="py-10 text-center text-[#9d6b7a]">{t('log.loading')}</td></tr>
               ) : filteredReceipts.length === 0 ? (
-                <tr><td colSpan={7} className="py-10 text-center text-[#9d6b7a]">Chưa có dữ liệu phiếu kho nào.</td></tr>
+                <tr><td colSpan={7} className="py-10 text-center text-[#9d6b7a]">{t('log.no_data')}</td></tr>
               ) : (
                 filteredReceipts.map((r) => (
                   <tr key={r.id} className="border-b border-[#D4AF37]/5 hover:bg-white transition-colors">
@@ -201,11 +203,11 @@ export function Logistics() {
                           onClick={() => setConfirmModal({ isOpen: true, ticketCode: r.id })} 
                           className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[12px] font-bold transition-all flex items-center gap-1.5 mx-auto shadow-md shadow-emerald-500/20 hover:-translate-y-0.5"
                         >
-                          <PackageCheck size={16}/> Xác nhận Nhập Kho
+                          <PackageCheck size={16}/> {t('log.confirm_intake')}
                         </button>
                       ) : r.status === 'Đã hoàn tất' || r.status === 'Đã nhập xong' ? (
                         <span className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full text-[11px] font-bold flex items-center justify-center gap-1.5 w-max mx-auto shadow-sm">
-                          <CheckCircle2 size={14}/> Đã hoàn tất
+                          <CheckCircle2 size={14}/> {t('log.completed')}
                         </span>
                       ) : (
                         <span className="px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-600 rounded-full text-[11px] font-bold flex items-center justify-center gap-1.5 w-max mx-auto shadow-sm">
@@ -233,17 +235,19 @@ export function Logistics() {
               <div className="w-20 h-20 bg-emerald-50 border-4 border-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-5">
                 <PackageCheck size={40} />
               </div>
-              <h2 className="text-2xl font-bold mb-3 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>Xác nhận Nhập Kho</h2>
+              <h2 className="text-2xl font-bold mb-3 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>{t('log.confirm_intake')}</h2>
               <p className="text-[#9d6b7a] text-[14px] mb-8 leading-relaxed">
-                Bạn có chắc chắn hàng đã giao đủ và muốn tiến hành nhập kho cho phiếu <br/><strong className="text-[#D4AF37] text-[16px]">{confirmModal.ticketCode}</strong> không?<br/> Số lượng tồn kho sẽ được cộng tự động.
+                {language === 'vi' 
+                  ? `Bạn có chắc chắn hàng đã giao đủ và muốn tiến hành nhập kho cho phiếu ${confirmModal.ticketCode} không? Số lượng tồn kho sẽ được cộng tự động.` 
+                  : `Are you sure the goods have been fully delivered and want to intake for ticket ${confirmModal.ticketCode}? Stock counts will be updated automatically.`}
               </p>
               
               <div className="flex gap-3 w-full">
                 <button type="button" onClick={() => setConfirmModal({ isOpen: false, ticketCode: "" })} disabled={isApproving} className="flex-1 py-3.5 rounded-xl font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 text-[14px] transition-colors disabled:opacity-50">
-                  Hủy bỏ
+                  {t('log.cancel')}
                 </button>
                 <button onClick={executeApproveWarehouse} disabled={isApproving} className="flex-1 py-3.5 rounded-xl font-bold text-white shadow-lg shadow-emerald-500/30 hover:-translate-y-0.5 disabled:opacity-50 transition-all" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>
-                  {isApproving ? "Đang xử lý..." : "Xác Nhận Nhập"}
+                  {isApproving ? t('log.processing') : t('log.confirm_intake_btn')}
                 </button>
               </div>
             </div>
@@ -258,48 +262,48 @@ export function Logistics() {
             <button onClick={() => setIsTransferModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
               <X size={24} />
             </button>
-            <h2 className="text-2xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>Tạo Phiếu Chuyển Kho</h2>
+            <h2 className="text-2xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>{t('log.create_transfer_title')}</h2>
             
             <form onSubmit={handleCreateTransfer} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[12px] font-bold text-[#9d6b7a] uppercase mb-1">Kho Đi</label>
+                  <label className="block text-[12px] font-bold text-[#9d6b7a] uppercase mb-1">{t('log.from_warehouse')}</label>
                   <select 
                     value={transferForm.fromId}
                     onChange={e => setTransferForm({...transferForm, fromId: e.target.value})}
                     className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-[#D4AF37]"
                   >
-                    <option value="">Chọn kho đi</option>
+                    <option value="">{t('log.select_from_warehouse')}</option>
                     {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[12px] font-bold text-[#9d6b7a] uppercase mb-1">Kho Đến</label>
+                  <label className="block text-[12px] font-bold text-[#9d6b7a] uppercase mb-1">{t('log.to_warehouse')}</label>
                   <select 
                     value={transferForm.toId}
                     onChange={e => setTransferForm({...transferForm, toId: e.target.value})}
                     className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-[#D4AF37]"
                   >
-                    <option value="">Chọn kho đến</option>
+                    <option value="">{t('log.select_to_warehouse')}</option>
                     {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[12px] font-bold text-[#9d6b7a] uppercase mb-1">Sản Phẩm</label>
+                <label className="block text-[12px] font-bold text-[#9d6b7a] uppercase mb-1">{t('log.product')}</label>
                 <select 
                   value={transferForm.productId}
                   onChange={e => setTransferForm({...transferForm, productId: e.target.value})}
                   className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-[#D4AF37]"
                 >
-                  <option value="">Chọn sản phẩm</option>
-                  {products.map(p => <option key={p.id} value={p.id}>{p.name} (Tồn: {p.stock})</option>)}
+                  <option value="">{t('log.select_product')}</option>
+                  {products.map(p => <option key={p.id} value={p.id}>{p.name} ({t('log.stock_lbl')}: {p.stock})</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[12px] font-bold text-[#9d6b7a] uppercase mb-1">Số Lượng Chuyển</label>
+                <label className="block text-[12px] font-bold text-[#9d6b7a] uppercase mb-1">{t('log.transfer_qty')}</label>
                 <input 
                   type="number"
                   min="1"
@@ -311,10 +315,10 @@ export function Logistics() {
 
               <div className="flex gap-3 pt-4">
                 <button type="button" onClick={() => setIsTransferModalOpen(false)} className="flex-1 py-3.5 rounded-xl font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">
-                  Hủy bỏ
+                  {t('log.cancel')}
                 </button>
                 <button type="submit" disabled={isTransferring} className="flex-1 py-3.5 rounded-xl font-bold text-white shadow-lg shadow-amber-500/30" style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}>
-                  {isTransferring ? "Đang xử lý..." : "Xác Nhận Chuyển"}
+                  {isTransferring ? t('log.processing') : t('log.confirm_transfer_btn')}
                 </button>
               </div>
             </form>
@@ -332,7 +336,7 @@ export function Logistics() {
               {toast.type === "error" ? <AlertCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
             </div>
             <div>
-              <p className="font-bold text-[15px]">{toast.type === "success" ? "Thành công" : "Lỗi hệ thống"}</p>
+              <p className="font-bold text-[15px]">{toast.type === "success" ? (language === 'vi' ? "Thành công" : "Success") : t('log.system_error')}</p>
               <p className="text-white/80 text-[13px] mt-0.5">{toast.message}</p>
             </div>
             <button onClick={() => setToast({ ...toast, show: false })} className="ml-auto text-white/40 hover:text-white transition-colors">

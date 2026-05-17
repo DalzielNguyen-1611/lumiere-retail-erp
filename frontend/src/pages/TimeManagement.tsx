@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLanguage } from "../context/LanguageContext";
 import { 
   Clock, CalendarCheck, CalendarX, Fingerprint, LogOut, CheckCircle2, 
   Send, Sparkles, FileText, Clock3
@@ -18,6 +19,7 @@ const glassCard = {
 const BACKEND_URL = "http://localhost:5000";
 
 export function TimeManagement() {
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<"attendance" | "leave">("attendance");
   const [history, setHistory] = useState<any[]>([]);
   const [leaveHistory, setLeaveHistory] = useState<any[]>([]); 
@@ -61,14 +63,14 @@ export function TimeManagement() {
       });
       const json = await res.json();
       if (json.status === 'success') {
-        toast.success("Điểm danh thành công!", { description: "Chúc bạn một ca làm việc tràn đầy năng lượng! ✨" });
+        toast.success(t('time.toast_in_success'), { description: t('time.toast_in_desc') });
         fetchAttendance();
       } else {
         toast.warning(json.message);
       }
-    } catch (error) { toast.error("Lỗi kết nối máy chủ!"); }
+    } catch (error) { toast.error(t('time.toast_err_conn')); }
   };
-
+ 
   const handleCheckOut = async () => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/tm/check-out`, {
@@ -78,16 +80,15 @@ export function TimeManagement() {
       });
       const json = await res.json();
       if (json.status === 'success') {
-        toast.success(json.message, { description: "Cảm ơn bạn vì một ngày làm việc tuyệt vời. Nghỉ ngơi tốt nhé! 🌙" });
+        toast.success(json.message, { description: t('time.toast_out_desc') });
         fetchAttendance(); 
       } else {
         toast.warning(json.message); 
       }
-    } catch (error) { toast.error("Lỗi kết nối máy chủ!"); }
+    } catch (error) { toast.error(t('time.toast_err_conn')); }
   };
   
-  const [leaveForm, setLeaveForm] = useState({ type: 'Nghỉ phép năm (Có lương)', fromDate: '', toDate: '', days: 1, reason: '' });
-  
+  const [leaveForm, setLeaveForm] = useState({ type: language === 'vi' ? 'Nghỉ phép năm (Có lương)' : 'Annual leave (Paid)', fromDate: '', toDate: '', days: 1, reason: '' });
   // =========================================================================
   // THÊM EFFECT TỰ ĐỘNG TÍNH NGÀY NGHỈ
   // =========================================================================
@@ -112,10 +113,10 @@ export function TimeManagement() {
   const handleLeaveSubmit = async (e: any) => {
     e.preventDefault();
     if (leaveForm.days <= 0) {
-      toast.error("Lỗi ngày tháng", { description: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu!" });
+      toast.error(t('time.date_err'), { description: t('time.date_err_desc') });
       return;
     }
-
+ 
     try {
       const res = await fetch(`${BACKEND_URL}/api/tm/leave`, {
         method: 'POST',
@@ -124,11 +125,11 @@ export function TimeManagement() {
       });
       const json = await res.json();
       if (json.status === 'success') {
-        toast.success("Gửi đơn thành công!", { description: json.message });
-        setLeaveForm({ type: 'Nghỉ phép năm (Có lương)', fromDate: '', toDate: '', days: 1, reason: '' });
+        toast.success(t('time.submit_success'), { description: json.message });
+        setLeaveForm({ type: language === 'vi' ? 'Nghỉ phép năm (Có lương)' : 'Annual leave (Paid)', fromDate: '', toDate: '', days: 1, reason: '' });
         fetchLeaveHistory(); 
       } else toast.error(json.message);
-    } catch (error) { toast.error("Lỗi khi gửi đơn!"); }
+    } catch (error) { toast.error(t('time.submit_err')); }
   };
 
   return (
@@ -139,18 +140,18 @@ export function TimeManagement() {
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} color="#D4AF37" />
             <p className="text-[#9d6b7a] text-[13px] font-medium uppercase tracking-widest">
-              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {currentTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
           <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-            Công Ca & Nghỉ Phép
+            {language === 'vi' ? 'Công Ca & Nghỉ Phép' : 'Attendance & Leave'}
           </h1>
         </div>
         
         {/* TABS */}
         <div className="flex gap-1 p-1 bg-white/50 rounded-2xl border border-white shadow-inner">
-          <TabButton active={activeTab === "attendance"} onClick={() => setActiveTab("attendance")} icon={Fingerprint} label="Chấm Công" />
-          <TabButton active={activeTab === "leave"} onClick={() => setActiveTab("leave")} icon={CalendarX} label="Xin Nghỉ Phép" />
+          <TabButton active={activeTab === "attendance"} onClick={() => setActiveTab("attendance")} icon={Fingerprint} label={language === 'vi' ? "Chấm Công" : "Attendance"} />
+          <TabButton active={activeTab === "leave"} onClick={() => setActiveTab("leave")} icon={CalendarX} label={language === 'vi' ? "Xin Nghỉ Phép" : "Leave Request"} />
         </div>
       </div>
 
@@ -167,40 +168,40 @@ export function TimeManagement() {
                 </div>
                 <div>
                   <h2 className="text-[#3d1a2e] text-2xl lg:text-3xl font-black mb-0.5 tracking-tight">
-                    {currentTime.toLocaleTimeString('vi-VN')}
+                    {currentTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US')}
                   </h2>
                   <p className="text-[#9d6b7a] text-xs font-bold uppercase tracking-wider">
-                    {currentTime.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    {currentTime.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                 </div>
               </div>
               
               <div className="flex gap-3 w-full md:w-auto shrink-0">
                 <button onClick={handleCheckIn} className="flex-1 md:flex-none px-6 py-2.5 bg-[#D4AF37] hover:bg-[#C9A94E] text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all hover:-translate-y-1 text-[13px]">
-                  <Fingerprint size={16}/> Vào Ca
+                  <Fingerprint size={16}/> {t('time.check_in')}
                 </button>
                 <button onClick={handleCheckOut} className="flex-1 md:flex-none px-6 py-2.5 bg-white hover:bg-gray-50 text-[#3d1a2e] border border-gray-200 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-1 shadow-sm text-[13px]">
-                  <LogOut size={16}/> Kết Ca
+                  <LogOut size={16}/> {t('time.check_out')}
                 </button>
               </div>
             </div>
 
             <div style={glassCard} className="p-6 md:p-8">
               <h3 className="text-[#3d1a2e] font-bold mb-5 flex items-center gap-2 text-[15px]">
-                <CalendarCheck size={18} color="#D4AF37" /> Lịch sử chấm công chi tiết
+                <CalendarCheck size={18} color="#D4AF37" /> {t('time.history_title')}
               </h3>
               
               <div className="overflow-x-auto bg-white/40 rounded-xl border border-white shadow-sm">
                 <table className="w-full text-left border-collapse whitespace-nowrap">
                   <thead>
                     <tr className="bg-white/60 border-b border-gray-100">
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Ngày</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Giờ vào</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Giờ ra</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Giờ làm</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Tăng ca</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Trạng thái</th>
-                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Ghi chú</th>
+                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_date')}</th>
+                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_in')}</th>
+                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_out')}</th>
+                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_work')}</th>
+                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_ot')}</th>
+                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_status')}</th>
+                      <th className="py-3 px-5 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_notes')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -212,10 +213,10 @@ export function TimeManagement() {
                           {item.status === 'Đang làm việc' ? '--:--:--' : item.checkOut}
                         </td>
                         <td className="py-3 px-5 text-[#3d1a2e] text-[13px] font-medium">
-                          {item.status === 'Đang làm việc' ? '--' : `${item.workHours || 0} giờ`}
+                          {item.status === 'Đang làm việc' ? '--' : `${item.workHours || 0} ${t('time.hours')}`}
                         </td>
                         <td className="py-3 px-5 text-[#3d1a2e] text-[13px]">
-                          {item.overtime || 0} giờ
+                          {item.overtime || 0} {t('time.hours')}
                         </td>
                         <td className="py-3 px-5">
                           <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 ${
@@ -224,7 +225,7 @@ export function TimeManagement() {
                               : 'bg-emerald-100 text-emerald-700'
                           }`}>
                             {item.status === 'Đang làm việc' ? <Clock size={12}/> : <CheckCircle2 size={12}/>} 
-                            {item.status}
+                            {item.status === 'Đang làm việc' ? t('time.working') : (language === 'vi' ? 'Đã kết ca' : 'Completed')}
                           </span>
                         </td>
                         <td className="py-3 px-5 text-[#9d6b7a] text-[12px] max-w-[200px] truncate" title={item.notes}>
@@ -234,7 +235,7 @@ export function TimeManagement() {
                     )) : (
                       <tr>
                         <td colSpan={7} className="py-10 text-center text-[#9d6b7a] text-[13px] italic">
-                          Chưa có dữ liệu chấm công.
+                          {t('time.no_attendance')}
                         </td>
                       </tr>
                     )}
@@ -251,83 +252,90 @@ export function TimeManagement() {
             
             <div style={glassCard} className="p-6 lg:col-span-1 h-fit">
               <h2 className="text-[#3d1a2e] text-[16px] font-bold mb-5 flex items-center gap-2">
-                <CalendarX size={18} color="#D4AF37"/> Tạo Đơn Xin Nghỉ Phép
+                <CalendarX size={18} color="#D4AF37"/> {t('time.create_leave')}
               </h2>
               <form onSubmit={handleLeaveSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-[#9d6b7a] mb-1.5 uppercase">Loại nghỉ phép</label>
+                  <label className="block text-[11px] font-bold text-[#9d6b7a] mb-1.5 uppercase">{t('time.leave_type')}</label>
                   <select className="w-full p-2.5 text-[13px] rounded-xl border border-gray-200 bg-white/50 outline-none focus:border-[#D4AF37]" 
                     value={leaveForm.type} onChange={e => setLeaveForm({...leaveForm, type: e.target.value})}>
-                    <option>Nghỉ phép năm (Có lương)</option>
-                    <option>Nghỉ ốm</option>
-                    <option>Nghỉ việc riêng (Không lương)</option>
+                    <option value={language === 'vi' ? 'Nghỉ phép năm (Có lương)' : 'Annual leave (Paid)'}>{t('time.leave_annual')}</option>
+                    <option value={language === 'vi' ? 'Nghỉ ốm' : 'Sick leave'}>{t('time.leave_sick')}</option>
+                    <option value={language === 'vi' ? 'Nghỉ việc riêng (Không lương)' : 'Unpaid personal leave'}>{t('time.leave_unpaid')}</option>
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#9d6b7a] mb-1.5 uppercase">Từ ngày</label>
+                    <label className="block text-[11px] font-bold text-[#9d6b7a] mb-1.5 uppercase">{t('time.from_date')}</label>
                     <input type="date" required className="w-full p-2.5 text-[13px] rounded-xl border border-gray-200 bg-white/50 outline-none focus:border-[#D4AF37]"
                       value={leaveForm.fromDate} onChange={e => setLeaveForm({...leaveForm, fromDate: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-[#9d6b7a] mb-1.5 uppercase">Đến ngày</label>
+                    <label className="block text-[11px] font-bold text-[#9d6b7a] mb-1.5 uppercase">{t('time.to_date')}</label>
                     <input type="date" required className="w-full p-2.5 text-[13px] rounded-xl border border-gray-200 bg-white/50 outline-none focus:border-[#D4AF37]"
                       value={leaveForm.toDate} onChange={e => setLeaveForm({...leaveForm, toDate: e.target.value})} />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-[#9d6b7a] mb-1.5 uppercase flex justify-between">
-                    <span>Tổng số ngày</span>
-                    <span className="text-[10px] text-amber-600 italic font-normal lowercase">(Tự động tính)</span>
+                    <span>{t('time.total_days')}</span>
+                    <span className="text-[10px] text-amber-600 italic font-normal lowercase">{t('time.auto_calc')}</span>
                   </label>
                   <input type="number" min="0.5" step="0.5" required className="w-full p-2.5 text-[13px] rounded-xl border border-gray-200 bg-emerald-50/50 outline-none focus:border-[#D4AF37] font-bold text-[#3d1a2e]"
                     value={leaveForm.days} onChange={e => setLeaveForm({...leaveForm, days: Number(e.target.value)})} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-[#9d6b7a] mb-1.5 uppercase">Lý do chi tiết</label>
+                  <label className="block text-[11px] font-bold text-[#9d6b7a] mb-1.5 uppercase">{t('time.reason')}</label>
                   <textarea rows={3} required className="w-full p-2.5 text-[13px] rounded-xl border border-gray-200 bg-white/50 outline-none focus:border-[#D4AF37] resize-none"
                     value={leaveForm.reason} onChange={e => setLeaveForm({...leaveForm, reason: e.target.value})} />
                 </div>
                 <button type="submit" className="w-full bg-[#3d1a2e] hover:bg-[#2a111f] text-white py-3 rounded-xl font-bold transition-all shadow-md mt-2 flex justify-center items-center gap-2 text-[13px]">
-                  <Send size={16}/> Gửi Đơn Cho Quản Lý
+                  <Send size={16}/> {t('time.submit_leave')}
                 </button>
               </form>
             </div>
 
             <div style={glassCard} className="p-6 lg:col-span-2">
               <h2 className="text-[#3d1a2e] text-[16px] font-bold mb-5 flex items-center gap-2">
-                <FileText size={18} color="#D4AF37"/> Danh sách đơn đã gửi
+                <FileText size={18} color="#D4AF37"/> {t('time.submitted_leaves')}
               </h2>
               
               <div className="overflow-x-auto bg-white/40 rounded-xl border border-white shadow-sm">
                 <table className="w-full text-left border-collapse whitespace-nowrap">
                   <thead>
                     <tr className="bg-white/60 border-b border-gray-100">
-                      <th className="py-3 px-4 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Loại nghỉ</th>
-                      <th className="py-3 px-4 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Thời gian</th>
-                      <th className="py-3 px-4 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Số ngày</th>
-                      <th className="py-3 px-4 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">Trạng thái</th>
+                      <th className="py-3 px-4 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.leave_col_type')}</th>
+                      <th className="py-3 px-4 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.leave_col_time')}</th>
+                      <th className="py-3 px-4 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.leave_col_days')}</th>
+                      <th className="py-3 px-4 text-[#9d6b7a] font-bold text-[11px] uppercase tracking-wider">{t('time.col_status')}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {leaveHistory.length > 0 ? leaveHistory.map((item, index) => (
-                      <tr key={index} className="border-b border-gray-100/50 hover:bg-white/70 transition-colors">
-                        <td className="py-3 px-4 text-[#3d1a2e] text-[13px] font-bold">{item.type}</td>
-                        <td className="py-3 px-4 text-[#9d6b7a] text-[13px]">{item.fromDate} - {item.toDate}</td>
-                        <td className="py-3 px-4 text-[#3d1a2e] text-[13px] font-medium">{item.days} ngày</td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 ${
-                            item.status === 'Chờ duyệt' ? 'bg-amber-100 text-amber-700' : 
-                            item.status === 'Đã duyệt' ? 'bg-emerald-100 text-emerald-700' : 
-                            'bg-red-100 text-red-700'
-                          }`}>
-                            {item.status === 'Chờ duyệt' ? <Clock3 size={12}/> : <CheckCircle2 size={12}/>} 
-                            {item.status}
-                          </span>
-                        </td>
-                      </tr>
-                    )) : (
-                      <tr><td colSpan={4} className="py-10 text-center text-[#9d6b7a] text-[13px] italic">Bạn chưa gửi đơn xin nghỉ phép nào.</td></tr>
+                    {leaveHistory.length > 0 ? leaveHistory.map((item, index) => {
+                      const typeLabel = item.type === 'Nghỉ phép năm (Có lương)' ? t('time.leave_annual') : 
+                                        item.type === 'Nghỉ ốm' ? t('time.leave_sick') : 
+                                        item.type === 'Nghỉ việc riêng (Không lương)' ? t('time.leave_unpaid') : item.type;
+                      const statusLabel = item.status === 'Chờ duyệt' ? t('time.pending') : 
+                                          item.status === 'Đã duyệt' ? t('time.approved') : t('time.rejected');
+                      return (
+                        <tr key={index} className="border-b border-gray-100/50 hover:bg-white/70 transition-colors">
+                          <td className="py-3 px-4 text-[#3d1a2e] text-[13px] font-bold">{typeLabel}</td>
+                          <td className="py-3 px-4 text-[#9d6b7a] text-[13px]">{item.fromDate} - {item.toDate}</td>
+                          <td className="py-3 px-4 text-[#3d1a2e] text-[13px] font-medium">{item.days} {t('time.days_count')}</td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 ${
+                              item.status === 'Chờ duyệt' ? 'bg-amber-100 text-amber-700' : 
+                              item.status === 'Đã duyệt' ? 'bg-emerald-100 text-emerald-700' : 
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {item.status === 'Chờ duyệt' ? <Clock3 size={12}/> : <CheckCircle2 size={12}/>} 
+                              {statusLabel}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    }) : (
+                      <tr><td colSpan={4} className="py-10 text-center text-[#9d6b7a] text-[13px] italic">{t('time.no_leaves')}</td></tr>
                     )}
                   </tbody>
                 </table>

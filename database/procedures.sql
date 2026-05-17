@@ -841,3 +841,221 @@ BEGIN
     COMMIT;
 END;
 /
+
+--------------------------------------------------------------------------------
+-- PROCEDURE: SP_DUYET_PHIEU_DOI_TRA
+-- Thực hiện duyệt phiếu đổi trả và tự động hạch toán kép VAS (Nợ/Có) tại CSDL
+--------------------------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE SP_DUYET_PHIEU_DOI_TRA (
+    p_MAPHIEU IN NUMBER
+) AS
+    v_MADONHANG NUMBER;
+    v_TONGTIEN_HOAN NUMBER;
+    v_TONGTIEN_THU_THEM NUMBER;
+    v_LOAI_PHIEU NVARCHAR2(100);
+    v_LYDO NVARCHAR2(1000);
+    v_MACUAHANG NUMBER := 1;
+    v_TK_THANH_TOAN NUMBER := 111;
+    v_doanhthu_giam NUMBER;
+    v_vat_giam NUMBER;
+    v_doanhthu_tang NUMBER;
+    v_vat_tang NUMBER;
+    v_gia_von_don_vi NUMBER;
+    v_tong_gia_von NUMBER;
+    
+    CURSOR c_items IS
+        SELECT MASANPHAM_TRA, SOLUONG_TRA, DONGIA_TRA, MASANPHAM_DOI, SOLUONG_DOI, DONGIA_DOI, GIATRI_CHENH_LECH
+        FROM CHI_TIET_DOI_TRA
+        WHERE MAPHIEU = p_MAPHIEU;
+BEGIN
+    -- 1. Đảm bảo các tài khoản kế toán 5212 và 811 tồn tại
+    MERGE INTO TAI_KHOAN t USING (
+      SELECT 5212 AS MATAIKHOAN, N'Hàng bán bị trả lại' AS TENTAIKHOAN, N'Doanh thu' AS LOAITAIKHOAN, 0 AS SODUHIENTAI, N'Ghi giảm doanh thu hàng bị trả' AS MUCDICH FROM DUAL
+    ) s ON (t.MATAIKHOAN = s.MATAIKHOAN)
+    WHEN NOT MATCHED THEN
+      INSERT (MATAIKHOAN, TENTAIKHOAN, LOAITAIKHOAN, SODUHIENTAI, MUCDICH)
+      VALUES (s.MATAIKHOAN, s.TENTAIKHOAN, s.LOAITAIKHOAN, s.SODUHIENTAI, s.MUCDICH);
+
+    MERGE INTO TAI_KHOAN t USING (
+      SELECT 811 AS MATAIKHOAN, N'Chi phí khác' AS TENTAIKHOAN, N'Chi phí' AS LOAITAIKHOAN, 0 AS SODUHIENTAI, N'Ghi nhận chi phí khác / hàng hỏng' AS MUCDICH FROM DUAL
+    ) s ON (t.MATAIKHOAN = s.MATAIKHOAN)
+    WHEN NOT MATCHED THEN
+      INSERT (MATAIKHOAN, TENTAIKHOAN, LOAITAIKHOAN, SODUHIENTAI, MUCDICH)
+      VALUES (s.MATAIKHOAN, s.TENTAIKHOAN, s.LOAITAIKHOAN, s.SODUHIENTAI, s.MUCDICH);
+
+    -- 2. Lấy thông tin phiếu đổi trả
+    SELECT MADONHANG, TONGTIEN_HOAN, TONGTIEN_THU_THEM, LOAI_PHIEU, LYDO
+    INTO v_MADONHANG, v_TONGTIEN_HOAN, v_TONGTIEN_THU_THEM, v_LOAI_PHIEU, v_LYDO
+    FROM PHIEU_DOI_TRA
+    WHERE MAPHIEU = p_MAPHIEU;
+    
+    -- 3. Xác định tài khoản thanh toán (111 hoặc 112)
+    IF UPPER(v_LYDO) LIKE '%BANK%' 
+       OR UPPER(v_LYDO) LIKE '%TRANSFER%' 
+       OR UPPER(v_LYDO) LIKE '%CHUYỂN KHOẢN%'
+       OR UPPER(v_LYDO) LIKE '%POINTS%'
+       OR UPPER(v_LYDO) LIKE '%CREDIT%'
+       OR UPPER(v_LYDO) LIKE '%TÍCH ĐIỂM%' THEN
+        v_TK_THANH_TOAN := 112;
+    ELSE
+        v_TK_THANH_TOAN := 111;
+    END IF;
+
+    -- ========================================================================
+    -- TRƯỜNG HỢP 1: HOÀN HÀNG VÀ HOÀN TIỀN (LOAI_PHIEU != 'Đổi hàng')
+    -- ========================================================================
+    IF NVL(v_LOAI_PHIEU, 'Trả hàng') != 'Đổi hàng' THEN
+        IF NVL(v_TONGTIEN_HOAN, 0) > 0 THEN
+            v_doanhthu_giam := ROUND(v_TONGTIEN_HOAN / 1.1);
+            v_vat_giam := v_TONGTIEN_HOAN - v_doanhthu_giam;
+
+            -- 1. Nợ TK 5212 (Hàng bán bị trả lại)
+            INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+            VALUES (v_MACUAHANG, 5212, 'THU', v_doanhthu_giam, SYSTIMESTAMP, 'Hoàn tiền: Nợ TK 5212 giảm doanh thu chưa thuế (Phiếu RET-' || p_MAPHIEU || ', HĐ INV-' || v_MADONHANG || ')');
+
+            -- 2. Nợ TK 3331 (Thuế GTGT đầu ra)
+            INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+            VALUES (v_MACUAHANG, 3331, 'CHI', v_vat_giam, SYSTIMESTAMP, 'Hoàn tiền: Nợ TK 3331 giảm thuế GTGT đầu ra (Phiếu RET-' || p_MAPHIEU || ', HĐ INV-' || v_MADONHANG || ')');
+
+            -- 3. Có TK 111/112 (Tiền mặt / Chuyển khoản)
+            INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+            VALUES (v_MACUAHANG, v_TK_THANH_TOAN, 'CHI', v_TONGTIEN_HOAN, SYSTIMESTAMP, 'Hoàn tiền: Có TK ' || v_TK_THANH_TOAN || ' trả lại tiền cho khách (Phiếu RET-' || p_MAPHIEU || ')');
+        END IF;
+
+        -- 4. Bút toán nhập lại hàng vào kho (Ghi giảm giá vốn)
+        FOR rec IN c_items LOOP
+            IF rec.SOLUONG_TRA > 0 THEN
+                -- Tính giá vốn
+                SELECT NVL(
+                  (SELECT SUM(THANHTIEN) / SUM(SOLUONG) FROM CHI_TIET_HOA_DON_MUA_HANG WHERE MASANPHAM = rec.MASANPHAM_TRA),
+                  rec.DONGIA_TRA * 0.6
+                ) INTO v_gia_von_don_vi FROM DUAL;
+                
+                v_tong_gia_von := ROUND(v_gia_von_don_vi * rec.SOLUONG_TRA);
+                
+                -- Phân tích restock từ trường lý do: Mặc định là TRUE, ngoại trừ trường hợp có "[id:false]"
+                IF v_LYDO LIKE '%' || rec.MASANPHAM_TRA || ':false%' THEN
+                    -- Ghi Nợ TK 811 (Chi phí khác)
+                    INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+                    VALUES (v_MACUAHANG, 811, 'THU', v_tong_gia_von, SYSTIMESTAMP, 'Hoàn tiền: Nợ TK 811 chi phí hàng lỗi hủy trực tiếp (Phiếu RET-' || p_MAPHIEU || ')');
+                ELSE
+                    -- Cộng kho
+                    UPDATE TON_KHO SET SOLUONGTON = SOLUONGTON + rec.SOLUONG_TRA
+                    WHERE MASANPHAM = rec.MASANPHAM_TRA AND MAKHO = 1;
+
+                    -- Ghi Nợ TK 156 (Hàng hóa)
+                    INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+                    VALUES (v_MACUAHANG, 156, 'THU', v_tong_gia_von, SYSTIMESTAMP, 'Hoàn tiền: Nợ TK 156 nhập kho lại hàng tốt (Phiếu RET-' || p_MAPHIEU || ', HĐ INV-' || v_MADONHANG || ')');
+                END IF;
+
+                -- Ghi Có TK 632 (Giá vốn hàng bán)
+                INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+                VALUES (v_MACUAHANG, 632, 'CHI', v_tong_gia_von, SYSTIMESTAMP, 'Hoàn tiền: Có TK 632 giảm giá vốn hàng bán tương ứng (Phiếu RET-' || p_MAPHIEU || ')');
+            END IF;
+        END LOOP;
+
+    -- ========================================================================
+    -- TRƯỜNG HỢP 2: KHÁCH MUỐN ĐỔI HÀNG (LOAI_PHIEU == 'Đổi hàng')
+    -- ========================================================================
+    ELSE
+        FOR rec IN c_items LOOP
+            -- 1.1. Nhập lại món hàng cũ
+            IF rec.SOLUONG_TRA > 0 THEN
+                SELECT NVL(
+                  (SELECT SUM(THANHTIEN) / SUM(SOLUONG) FROM CHI_TIET_HOA_DON_MUA_HANG WHERE MASANPHAM = rec.MASANPHAM_TRA),
+                  rec.DONGIA_TRA * 0.6
+                ) INTO v_gia_von_don_vi FROM DUAL;
+                
+                v_tong_gia_von := ROUND(v_gia_von_don_vi * rec.SOLUONG_TRA);
+
+                IF v_LYDO LIKE '%' || rec.MASANPHAM_TRA || ':false%' THEN
+                    -- Nợ TK 811
+                    INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+                    VALUES (v_MACUAHANG, 811, 'THU', v_tong_gia_von, SYSTIMESTAMP, 'Đổi hàng: Nợ TK 811 chi phí hàng lỗi cũ hủy (Phiếu RET-' || p_MAPHIEU || ')');
+                ELSE
+                    -- Cộng kho hàng cũ
+                    UPDATE TON_KHO SET SOLUONGTON = SOLUONGTON + rec.SOLUONG_TRA
+                    WHERE MASANPHAM = rec.MASANPHAM_TRA AND MAKHO = 1;
+
+                    -- Nợ TK 156
+                    INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+                    VALUES (v_MACUAHANG, 156, 'THU', v_tong_gia_von, SYSTIMESTAMP, 'Đổi hàng: Nợ TK 156 nhập lại kho hàng tốt cũ (Phiếu RET-' || p_MAPHIEU || ')');
+                END IF;
+
+                -- Có TK 632
+                INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+                VALUES (v_MACUAHANG, 632, 'CHI', v_tong_gia_von, SYSTIMESTAMP, 'Đổi hàng: Có TK 632 giảm giá vốn món cũ (Phiếu RET-' || p_MAPHIEU || ')');
+            END IF;
+
+            -- 1.2. Xuất bán món hàng mới
+            IF NVL(rec.SOLUONG_DOI, 0) > 0 AND rec.MASANPHAM_DOI IS NOT NULL THEN
+                SELECT NVL(
+                  (SELECT SUM(THANHTIEN) / SUM(SOLUONG) FROM CHI_TIET_HOA_DON_MUA_HANG WHERE MASANPHAM = rec.MASANPHAM_DOI),
+                  NVL(rec.DONGIA_DOI, 0) * 0.6
+                ) INTO v_gia_von_don_vi FROM DUAL;
+                
+                v_tong_gia_von := ROUND(v_gia_von_don_vi * rec.SOLUONG_DOI);
+
+                -- Trừ kho món hàng mới
+                UPDATE TON_KHO SET SOLUONGTON = SOLUONGTON - rec.SOLUONG_DOI
+                WHERE MASANPHAM = rec.MASANPHAM_DOI AND MAKHO = 1;
+
+                -- Nợ TK 632 / Có TK 156
+                INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+                VALUES (v_MACUAHANG, 632, 'THU', v_tong_gia_von, SYSTIMESTAMP, 'Đổi hàng: Nợ TK 632 tăng giá vốn món hàng mới (Phiếu RET-' || p_MAPHIEU || ')');
+
+                INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+                VALUES (v_MACUAHANG, 156, 'CHI', v_tong_gia_von, SYSTIMESTAMP, 'Đổi hàng: Có TK 156 giảm kho xuất hàng mới (Phiếu RET-' || p_MAPHIEU || ')');
+            END IF;
+        END LOOP;
+
+        -- 2. Xử lý doanh thu và tiền mặt chênh lệch
+        -- Tình huống 2.2: Khách phải bù thêm tiền
+        IF NVL(v_TONGTIEN_THU_THEM, 0) > 0 THEN
+            v_doanhthu_tang := ROUND(v_TONGTIEN_THU_THEM / 1.1);
+            v_vat_tang := v_TONGTIEN_THU_THEM - v_doanhthu_tang;
+
+            -- Nợ TK 111/112
+            INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+            VALUES (v_MACUAHANG, v_TK_THANH_TOAN, 'THU', v_TONGTIEN_THU_THEM, SYSTIMESTAMP, 'Đổi hàng: Nợ TK ' || v_TK_THANH_TOAN || ' thu thêm tiền chênh lệch từ khách (Phiếu RET-' || p_MAPHIEU || ')');
+
+            -- Có TK 5111
+            INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+            VALUES (v_MACUAHANG, 5111, 'THU', v_doanhthu_tang, SYSTIMESTAMP, 'Đổi hàng: Có TK 5111 tăng doanh thu chênh lệch hàng đắt hơn (Phiếu RET-' || p_MAPHIEU || ')');
+
+            -- Có TK 3331
+            INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+            VALUES (v_MACUAHANG, 3331, 'THU', v_vat_tang, SYSTIMESTAMP, 'Đổi hàng: Có TK 3331 thuế GTGT đầu ra phần chênh lệch (Phiếu RET-' || p_MAPHIEU || ')');
+
+        -- Tình huống 2.3: Thối lại tiền thừa
+        ELSIF NVL(v_TONGTIEN_HOAN, 0) > 0 THEN
+            v_doanhthu_giam := ROUND(v_TONGTIEN_HOAN / 1.1);
+            v_vat_giam := v_TONGTIEN_HOAN - v_doanhthu_giam;
+
+            -- Nợ TK 5212
+            INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+            VALUES (v_MACUAHANG, 5212, 'THU', v_doanhthu_giam, SYSTIMESTAMP, 'Đổi hàng: Nợ TK 5212 giảm doanh thu chênh lệch hàng rẻ hơn (Phiếu RET-' || p_MAPHIEU || ')');
+
+            -- Nợ TK 3331
+            INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+            VALUES (v_MACUAHANG, 3331, 'CHI', v_vat_giam, SYSTIMESTAMP, 'Đổi hàng: Nợ TK 3331 giảm thuế đầu ra chênh lệch (Phiếu RET-' || p_MAPHIEU || ')');
+
+            -- Có TK 111/112
+            INSERT INTO GIAO_DICH_TIEN (MACUAHANG, MATAIKHOAN, LOAIGIAODICH, SOTIEN, NGAYGIAODICH, GHICHU)
+            VALUES (v_MACUAHANG, v_TK_THANH_TOAN, 'CHI', v_TONGTIEN_HOAN, SYSTIMESTAMP, 'Đổi hàng: Có TK ' || v_TK_THANH_TOAN || ' thối tiền thừa chênh lệch cho khách (Phiếu RET-' || p_MAPHIEU || ')');
+        END IF;
+    END IF;
+
+    -- 5. Cập nhật trạng thái phiếu đổi trả
+    UPDATE PHIEU_DOI_TRA
+    SET TRANG_THAI = 'Đã hoàn tất',
+        NGAYDUYET = SYSTIMESTAMP
+    WHERE MAPHIEU = p_MAPHIEU;
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+/

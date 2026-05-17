@@ -1,5 +1,6 @@
 // File: src/pages/Customers.tsx
 import { useState, useEffect, useMemo } from "react";
+import { useLanguage } from "../context/LanguageContext";
 import { Search, Users, Heart, Star, UserPlus, CheckCircle2, XCircle, X, Sparkles } from "lucide-react";
 
 const glassCard = {
@@ -21,17 +22,18 @@ interface CustomerData {
   createdAt?: string;
 }
 
-const tierStyle: Record<string, { bg: string; color: string }> = {
-  "Kim Cương": { bg: "linear-gradient(135deg, #D4AF37, #C9A94E)", color: "white" },
-  "VIP": { bg: "linear-gradient(135deg, #D4AF37, #C9A94E)", color: "white" },
-  "Vàng": { bg: "rgba(212,175,55,0.15)", color: "#92740d" },
-  "Bạc": { bg: "rgba(148,163,184,0.15)", color: "#64748b" },
-  "Thường": { bg: "rgba(255,255,255,0.5)", color: "#9d6b7a" },
+const tierStyle: Record<string, { bg: string; color: string; label: { vi: string, en: string } }> = {
+  "Kim Cương": { bg: "linear-gradient(135deg, #D4AF37, #C9A94E)", color: "white", label: { vi: "Kim Cương", en: "Diamond" } },
+  "VIP": { bg: "linear-gradient(135deg, #D4AF37, #C9A94E)", color: "white", label: { vi: "VIP", en: "VIP" } },
+  "Vàng": { bg: "rgba(212,175,55,0.15)", color: "#92740d", label: { vi: "Vàng", en: "Gold" } },
+  "Bạc": { bg: "rgba(148,163,184,0.15)", color: "#64748b", label: { vi: "Bạc", en: "Silver" } },
+  "Thường": { bg: "rgba(255,255,255,0.5)", color: "#9d6b7a", label: { vi: "Thường", en: "Regular" } },
 };
 
 const avatarColors = ["#F48FB1", "#D4AF37", "#C084FC", "#FDA4AF", "#F9A8D4", "#FCA5A5", "#86EFAC", "#93C5FD"];
 
 export function Customers() {
+  const { t, language } = useLanguage();
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -150,10 +152,10 @@ export function Customers() {
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} color="#D4AF37" />
             <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {currentTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
-          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>Quản Lý Khách Hàng</h1>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>{t('part.title')}</h1>
         </div>
         <button
           onClick={() => {
@@ -163,15 +165,15 @@ export function Customers() {
           className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer"
           style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}
         >
-          <UserPlus size={18} /> Thêm Khách Hàng
+          <UserPlus size={18} /> {language === 'vi' ? 'Thêm Khách Hàng' : 'Add Customer'}
         </button>
       </div>
 
       <div className="grid grid-cols-3 gap-5 mb-8">
         {[
-          { label: "Tổng Khách Hàng", value: customers.length.toLocaleString('vi-VN'), icon: Users, color: "#D4AF37", bg: "rgba(212,175,55,0.12)" },
-          { label: "Khách Có Thẻ Thành Viên", value: customers.filter(p => p.tier !== "Thường").length.toLocaleString('vi-VN'), icon: Heart, color: "#F48FB1", bg: "rgba(244,143,177,0.12)" },
-          { label: "Khách VIP", value: customers.filter(p => p.tier.includes("VIP") || p.tier.includes("Kim Cương")).length.toLocaleString('vi-VN'), icon: Star, color: "#C084FC", bg: "rgba(192,132,252,0.12)" },
+          { label: language === 'vi' ? "Tổng Khách Hàng" : "Total Customers", value: customers.length.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US'), icon: Users, color: "#D4AF37", bg: "rgba(212,175,55,0.12)" },
+          { label: language === 'vi' ? "Khách Có Thẻ Thành Viên" : "Membership Members", value: customers.filter(p => p.tier !== "Thường").length.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US'), icon: Heart, color: "#F48FB1", bg: "rgba(244,143,177,0.12)" },
+          { label: language === 'vi' ? "Khách VIP" : "VIP Customers", value: customers.filter(p => p.tier.includes("VIP") || p.tier.includes("Kim Cương")).length.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US'), icon: Star, color: "#C084FC", bg: "rgba(192,132,252,0.12)" },
         ].map((s) => (
           <div key={s.label} style={glassCard} className="p-5 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: s.bg }}><s.icon size={22} color={s.color} /></div>
@@ -186,10 +188,10 @@ export function Customers() {
       <div style={glassCard}>
         <div className="p-6 pb-0 border-b" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[16px] font-bold text-[#3d1a2e]">Danh sách Khách hàng</h2>
+            <h2 className="text-[16px] font-bold text-[#3d1a2e]">{language === 'vi' ? 'Danh sách Khách hàng' : 'Customer List'}</h2>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 border border-[rgba(212,175,55,0.2)]">
               <Search size={15} color="#9d6b7a" />
-              <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Tìm tên, SĐT..." className="bg-transparent outline-none text-[13px] w-[200px]" />
+              <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={language === 'vi' ? 'Tìm tên, SĐT...' : 'Search name, phone...'} className="bg-transparent outline-none text-[13px] w-[200px]" />
             </div>
           </div>
         </div>
@@ -198,11 +200,11 @@ export function Customers() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-[rgba(212,175,55,0.15)] text-[11px] font-bold text-[#9d6b7a] uppercase tracking-wider">
-                <th className="p-3">Khách hàng</th>
-                <th className="p-3">Liên hệ</th>
-                <th className="p-3">Ngày tham gia</th>
-                <th className="p-3">Hạng thẻ</th>
-                <th className="p-3">Điểm</th>
+                <th className="p-3">{language === 'vi' ? 'Khách hàng' : 'Customer'}</th>
+                <th className="p-3">{language === 'vi' ? 'Liên hệ' : 'Contact'}</th>
+                <th className="p-3">{language === 'vi' ? 'Ngày tham gia' : 'Joined Date'}</th>
+                <th className="p-3">{language === 'vi' ? 'Hạng thẻ' : 'Tier'}</th>
+                <th className="p-3">{language === 'vi' ? 'Điểm' : 'Points'}</th>
               </tr>
             </thead>
             <tbody>
@@ -220,8 +222,12 @@ export function Customers() {
                   </td>
                   <td className="p-3 text-[13px] text-[#6b4153] font-medium">{p.phone}</td>
                   <td className="p-3 text-[13px] text-[#6b4153]">{p.createdAt}</td>
-                  <td className="p-3"><span className="px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: tierStyle[p.tier]?.bg || "gray", color: tierStyle[p.tier]?.color || "white" }}>{p.tier}</span></td>
-                  <td className="p-3 text-[13px] font-bold text-[#3d1a2e]">{p.points.toLocaleString('vi-VN')} pts</td>
+                  <td className="p-3">
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: tierStyle[p.tier]?.bg || "gray", color: tierStyle[p.tier]?.color || "white" }}>
+                      {language === 'vi' ? (tierStyle[p.tier]?.label?.vi || p.tier) : (tierStyle[p.tier]?.label?.en || p.tier)}
+                    </span>
+                  </td>
+                  <td className="p-3 text-[13px] font-bold text-[#3d1a2e]">{p.points.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US')} pts</td>
                 </tr>
               ))}
             </tbody>
@@ -234,7 +240,7 @@ export function Customers() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
             <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600"><X size={20} /></button>
-            <h2 className="text-xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>Thêm Mới Khách Hàng</h2>
+            <h2 className="text-xl font-bold mb-6 text-[#3d1a2e]" style={{ fontFamily: "var(--font-heading)" }}>{language === 'vi' ? 'Thêm Mới Khách Hàng' : 'Add New Customer'}</h2>
             <div className="space-y-4">
               <div>
                 <label className="block mb-1.5 text-[#9d6b7a] text-[12px] font-bold uppercase tracking-wider">Tên Khách Hàng *</label>
@@ -304,7 +310,7 @@ export function Customers() {
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               toast.type === "success" ? "bg-emerald-500/20" : "bg-rose-500/20"
             }`}>
-              {toast.type === "error" ? <AlertCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
+              {toast.type === "error" ? <XCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
             </div>
             <div>
               <p className="font-bold text-[15px]">{toast.type === "success" ? "Thành công" : "Lỗi hệ thống"}</p>

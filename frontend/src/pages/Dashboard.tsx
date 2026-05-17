@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, PieChart, Pie
@@ -23,8 +24,9 @@ const COLORS = ['#D4AF37', '#3d1a2e', '#c9a0b0', '#10b981', '#3b82f6'];
 const BACKEND_URL = "http://localhost:5000";
 
 export function Dashboard() {
+  const { t, language } = useLanguage();
   const { user } = useAuth();
-  const userName = (user as any)?.HOTEN || (user as any)?.name || "Quản trị viên";
+  const userName = (user as any)?.HOTEN || (user as any)?.name || t('dash.admin');
 
   const [currentTime, setCurrentTime] = useState(new Date());
   useEffect(() => {
@@ -32,7 +34,11 @@ export function Dashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  const greeting = currentTime.getHours() < 12 ? "Chào buổi sáng" : currentTime.getHours() < 18 ? "Chào buổi chiều" : "Chào buổi tối";
+  const greeting = currentTime.getHours() < 12 
+    ? t('dash.greeting_morning') 
+    : currentTime.getHours() < 18 
+      ? t('dash.greeting_afternoon') 
+      : t('dash.greeting_evening');
 
   // --- STATE DỮ LIỆU ---
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +53,7 @@ export function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/api/dashboard`);
-        if (!res.ok) throw new Error("Mất kết nối máy chủ");
+        if (!res.ok) throw new Error(t('common.error'));
         const json = await res.json();
         
         if (json.status === "success") {
@@ -78,7 +84,8 @@ export function Dashboard() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute:'2-digit' }) + " - " + date.toLocaleDateString('vi-VN');
+    const locale = language === 'vi' ? 'vi-VN' : 'en-US';
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute:'2-digit' }) + " - " + date.toLocaleDateString(locale);
   };
 
   return (
@@ -89,7 +96,7 @@ export function Dashboard() {
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} color="#D4AF37" />
             <p className="text-[#9d6b7a] text-[13px] font-medium uppercase tracking-widest">
-              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {currentTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
           <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>
@@ -101,7 +108,7 @@ export function Dashboard() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center h-64">
           <Loader2 className="animate-spin mb-4" color="#D4AF37" size={40} />
-          <p className="text-[#9d6b7a] font-medium">Đang tổng hợp dữ liệu toàn hệ thống...</p>
+          <p className="text-[#9d6b7a] font-medium">{t('dash.loading')}</p>
         </div>
       ) : (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6">
@@ -109,22 +116,22 @@ export function Dashboard() {
           {/* ================= THẺ THỐNG KÊ NHANH (KPI CARDS) ================= */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
             <StatCard 
-              title="Doanh Thu (Tháng)" 
+              title={t('dash.kpi_revenue')} 
               value={`${kpi.totalRevenue.toLocaleString()} ₫`} 
               trend="+12.5%" icon={Wallet} color="#D4AF37" bgIcon="bg-amber-50" 
             />
             <StatCard 
-              title="Đơn Hàng (Tháng)" 
+              title={t('dash.kpi_orders')} 
               value={kpi.newOrders} 
               trend="+5.2%" icon={ShoppingBag} color="#10b981" bgIcon="bg-emerald-50" 
             />
             <StatCard 
-              title="Tổng Khách Hàng" 
+              title={t('dash.kpi_customers')} 
               value={kpi.totalCustomers} 
               trend="+18.1%" icon={Users} color="#3b82f6" bgIcon="bg-blue-50" 
             />
             <StatCard 
-              title="Tỷ lệ chuyển đổi" 
+              title={t('dash.kpi_conversion')} 
               value={`${kpi.conversionRate}%`} 
               trend="-2.4%" icon={TrendingUp} color="#f43f5e" bgIcon="bg-rose-50" isNegative 
             />
@@ -137,13 +144,13 @@ export function Dashboard() {
             <div style={glassCard} className="p-6 xl:col-span-2 flex flex-col h-[400px]">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[#3d1a2e] text-[16px] font-bold flex items-center gap-2">
-                  <Activity size={18} color="#D4AF37"/> Doanh thu 6 tháng qua
+                  <Activity size={18} color="#D4AF37"/> {t('dash.chart_revenue')}
                 </h2>
               </div>
               
               <div className="flex-1 min-h-0 w-full">
                 {revenueData.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-[#9d6b7a] italic text-sm">Chưa có giao dịch bán hàng nào trong 6 tháng qua.</div>
+                  <div className="h-full flex items-center justify-center text-[#9d6b7a] italic text-sm">{t('dash.chart_revenue_empty')}</div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 30, bottom: 0 }}>
@@ -158,7 +165,7 @@ export function Dashboard() {
                       <YAxis axisLine={false} tickLine={false} tick={{fill: '#9d6b7a', fontSize: 12}} tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} dx={-10}/>
                       <Tooltip 
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                        formatter={(value: any) => [`${Number(value).toLocaleString()} ₫`, 'Doanh thu']}
+                        formatter={(value: any) => [`${Number(value).toLocaleString()} ₫`, t('dash.revenue')]}
                       />
                       <Area type="monotone" dataKey="value" stroke="#D4AF37" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
                     </AreaChart>
@@ -170,9 +177,9 @@ export function Dashboard() {
             {/* BIỂU ĐỒ CƠ CẤU DOANH THU (Cột chiếm 1/3) */}
             <div style={glassCard} className="p-6 xl:col-span-1 flex flex-col h-[400px]">
               <h2 className="text-[#3d1a2e] text-[16px] font-bold mb-2 flex items-center gap-2">
-                <PieChartIcon size={18} color="#D4AF37"/> Cơ cấu bán hàng
+                <PieChartIcon size={18} color="#D4AF37"/> {t('dash.chart_structure')}
               </h2>
-              <p className="text-[#9d6b7a] text-[12px] mb-4">Tỷ trọng doanh số theo thương hiệu</p>
+              <p className="text-[#9d6b7a] text-[12px] mb-4">{t('dash.chart_structure_sub')}</p>
               
               <div className="flex-1 min-h-0 w-full flex items-center justify-center relative">
                 <ResponsiveContainer width="100%" height="100%">
@@ -182,7 +189,7 @@ export function Dashboard() {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: any) => [`${Number(value).toLocaleString()} ₫`, 'Doanh số']} contentStyle={{ borderRadius: '8px', border: 'none', fontSize: '12px' }}/>
+                    <Tooltip formatter={(value: any) => [`${Number(value).toLocaleString()} ₫`, t('dash.sales')]} contentStyle={{ borderRadius: '8px', border: 'none', fontSize: '12px' }}/>
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -204,7 +211,7 @@ export function Dashboard() {
             {/* LƯU LƯỢNG ĐƠN HÀNG TRONG TUẦN */}
             <div style={glassCard} className="p-6 h-[350px] flex flex-col">
               <h2 className="text-[#3d1a2e] text-[16px] font-bold mb-6 flex items-center gap-2">
-                <ShoppingBag size={18} color="#D4AF37"/> Lượng đơn hàng trong tuần
+                <ShoppingBag size={18} color="#D4AF37"/> {t('dash.chart_weekly_orders')}
               </h2>
               <div className="flex-1 min-h-0 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -227,13 +234,13 @@ export function Dashboard() {
             <div style={glassCard} className="p-6 h-[350px] flex flex-col">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[#3d1a2e] text-[16px] font-bold flex items-center gap-2">
-                  <Clock size={18} color="#D4AF37"/> Hoạt động mới nhất
+                  <Clock size={18} color="#D4AF37"/> {t('dash.recent_activities')}
                 </h2>
               </div>
               
               <div className="flex-1 overflow-y-auto pr-2 space-y-4" style={{ scrollbarWidth: 'thin' }}>
                 {recentActivities.length === 0 ? (
-                  <p className="text-center text-[#9d6b7a] italic text-[13px] py-10">Chưa có hoạt động nào được ghi nhận.</p>
+                  <p className="text-center text-[#9d6b7a] italic text-[13px] py-10">{t('dash.no_activities')}</p>
                 ) : (
                   recentActivities.map((act, idx) => {
                     const props = getActivityProps(act.type);

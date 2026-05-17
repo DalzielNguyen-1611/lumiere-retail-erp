@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLanguage } from "../context/LanguageContext";
 import { Building, Truck, Plus, X, CheckCircle2, XCircle, Mail, MapPin, Phone, Receipt, ChevronDown, ChevronRight, Search, Trash2, Clock, Sparkles } from "lucide-react";
 // Đảm bảo đường dẫn này khớp với file AuthContext trong source code của bạn:
 import { useAuth } from "../context/AuthContext"; 
@@ -13,6 +14,7 @@ const getImageUrl = (imagePath: string) => {
 };
 
 export function Procurement() {
+  const { t, language } = useLanguage();
   const { user } = useAuth(); // Lấy dữ liệu tài khoản đang đăng nhập
   const [activeTab, setActiveTab] = useState<"suppliers"|"orders">("orders");
   
@@ -34,6 +36,9 @@ export function Procurement() {
   const [poForm, setPoForm] = useState({ supplierId: "", note: "" });
   const [poItems, setPoItems] = useState<{productId: number, name: string, quantity: number, price: number}[]>([]);
   const [productSearch, setProductSearch] = useState("");
+  const [supplierSearch, setSupplierSearch] = useState("");
+  const [orderSearch, setOrderSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   
   const [toast, setToast] = useState<{show: boolean, message: string, type: "success" | "error"}>({show: false, message: "", type: "success"});
 
@@ -156,160 +161,303 @@ export function Procurement() {
     }
   };
 
+  // Xử lý Tìm kiếm & Phân trang phía Client
+  const handleOrderSearchChange = (val: string) => {
+    setOrderSearch(val);
+    setCurrentPage(1);
+  };
+
+  const filteredSuppliers = suppliers.filter(s => 
+    s.name.toLowerCase().includes(supplierSearch.toLowerCase()) ||
+    (s.phone && s.phone.includes(supplierSearch)) ||
+    (s.email && s.email.toLowerCase().includes(supplierSearch.toLowerCase())) ||
+    (s.address && s.address.toLowerCase().includes(supplierSearch.toLowerCase()))
+  );
+
+  const filteredOrders = orders.filter(o => 
+    (o.code && o.code.toLowerCase().includes(orderSearch.toLowerCase())) ||
+    (o.supplier && o.supplier.toLowerCase().includes(orderSearch.toLowerCase())) ||
+    (o.status && o.status.toLowerCase().includes(orderSearch.toLowerCase())) ||
+    (o.date && o.date.includes(orderSearch)) ||
+    (`PO-${o.id}`.toLowerCase().includes(orderSearch.toLowerCase()))
+  );
+
+  const itemsPerPage = 10;
+  const totalItems = filteredOrders.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className="p-8 min-h-screen relative">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex justify-between items-end mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} color="#D4AF37" />
             <p style={{ color: "#9d6b7a", fontSize: "13px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {currentTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {currentTime.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
-          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>Mua Hàng & Cung Ứng</h1>
+          <h1 className="text-[#3d1a2e] text-[28px] font-bold" style={{ fontFamily: "var(--font-heading)" }}>{t('proc.title')}</h1>
         </div>
-        <div className="flex gap-3">
-          {activeTab === "suppliers" && (
-            <button onClick={() => setIsAddSupplierOpen(true)} className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>
-              <Building size={18} /> Thêm Nhà Cung Cấp
-            </button>
-          )}
-          <button onClick={() => setIsAddPOOpen(true)} className="flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-bold text-[14px] transition-all hover:scale-105 shadow-lg active:scale-95 cursor-pointer" style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}>
-            <Plus size={18} /> Tạo Đơn Nhập Hàng (PO)
+
+        {/* Tabs */}
+        <div className="flex gap-1 p-1 bg-white/50 rounded-2xl border border-white shadow-inner shrink-0">
+          <button 
+            onClick={() => setActiveTab("orders")} 
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-[13px] transition-all active:scale-95 shrink-0" 
+            style={{ 
+              background: activeTab === "orders" ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "transparent", 
+              color: activeTab === "orders" ? "#fff" : "#6b4153", 
+              boxShadow: activeTab === "orders" ? "0 8px 24px rgba(212,175,55,0.25)" : "none"
+            }}
+          >
+            <Truck size={16}/> {language === 'vi' ? 'Đơn Nhập Hàng (PO)' : 'Purchase Orders (PO)'}
+          </button>
+          <button 
+            onClick={() => setActiveTab("suppliers")} 
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-[13px] transition-all active:scale-95 shrink-0" 
+            style={{ 
+              background: activeTab === "suppliers" ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "transparent", 
+              color: activeTab === "suppliers" ? "#fff" : "#6b4153", 
+              boxShadow: activeTab === "suppliers" ? "0 8px 24px rgba(212,175,55,0.25)" : "none"
+            }}
+          >
+            <Building size={16}/> {t('part.suppliers')}
           </button>
         </div>
       </div>
 
-      <div className="flex gap-2 mb-6">
-        <button 
-          onClick={() => setActiveTab("orders")} 
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl text-[14px] font-bold transition-all shadow-sm hover:shadow-md active:scale-95" 
-          style={{ 
-            background: activeTab === "orders" ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "rgba(255,255,255,0.7)", 
-            color: activeTab === "orders" ? "#fff" : "#3d1a2e", 
-            border: "1px solid", 
-            borderColor: activeTab === "orders" ? "transparent" : "rgba(255,255,255,0.9)",
-            boxShadow: activeTab === "orders" ? "0 8px 24px rgba(212,175,55,0.25)" : "none"
-          }}
-        >
-          <Truck size={18}/> Đơn Nhập Hàng (PO)
-        </button>
-        <button 
-          onClick={() => setActiveTab("suppliers")} 
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl text-[14px] font-bold transition-all shadow-sm hover:shadow-md active:scale-95" 
-          style={{ 
-            background: activeTab === "suppliers" ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "rgba(255,255,255,0.7)", 
-            color: activeTab === "suppliers" ? "#fff" : "#3d1a2e", 
-            border: "1px solid", 
-            borderColor: activeTab === "suppliers" ? "transparent" : "rgba(255,255,255,0.9)",
-            boxShadow: activeTab === "suppliers" ? "0 8px 24px rgba(212,175,55,0.25)" : "none"
-          }}
-        >
-          <Building size={18}/> Quản Lý Nhà Cung Cấp
-        </button>
-      </div>
-
       {/* DANH SÁCH NHÀ CUNG CẤP */}
       {activeTab === "suppliers" && (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-          {isLoading ? (
-            <div className="col-span-2 text-center py-10 text-[#9d6b7a]">Đang tải dữ liệu...</div>
-          ) : suppliers.length === 0 ? (
-             <div className="col-span-2 text-center py-10 text-[#9d6b7a] bg-white/50 rounded-2xl border border-white">Chưa có dữ liệu nhà cung cấp nào.</div>
-          ) : (
-            suppliers.map(s => {
-              const supplierOrders = orders.filter(o => o.supplierId === s.id);
-              const isExpanded = expandedSupplier === s.id;
-
-              return (
-                <div key={s.id} style={glassCard} className="p-6 transition-all duration-300">
-                  <div className="flex items-center gap-4 mb-4 border-b border-[#D4AF37]/10 pb-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center border border-green-100"><Building color="#10b981" size={24}/></div>
-                    <div className="flex-1">
-                      <p className="font-bold text-[#3d1a2e] text-[16px]">{s.name}</p>
-                      <p className="text-[#9d6b7a] text-[12px] mt-0.5">ID: NCC-{s.id} • Tham gia: {s.createdAt || 'N/A'}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-3 text-[#6b4153] text-[13px]"><Phone size={14} color="#9d6b7a" /> {s.phone || "Chưa cập nhật SĐT"}</div>
-                    <div className="flex items-center gap-3 text-[#6b4153] text-[13px]"><Mail size={14} color="#9d6b7a" /> {s.email || "Chưa cập nhật Email"}</div>
-                    <div className="flex items-start gap-3 text-[#6b4153] text-[13px]"><MapPin size={14} color="#9d6b7a" className="shrink-0 mt-0.5" /> <span className="line-clamp-2">{s.address || "Chưa cập nhật địa chỉ"}</span></div>
-                  </div>
-
-                  <button onClick={() => setExpandedSupplier(isExpanded ? null : s.id)} className="w-full flex items-center justify-between py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 transition-colors rounded-xl text-[12px] font-bold text-[#059669]">
-                    <span className="flex items-center gap-2"><Receipt size={14}/> Lịch sử nhập hàng ({supplierOrders.length})</span>
-                    {isExpanded ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
-                  </button>
-
-                  {isExpanded && (
-                    <div className="mt-3 bg-white/60 rounded-xl border border-gray-100 overflow-hidden animate-in slide-in-from-top-2 fade-in">
-                      {supplierOrders.length === 0 ? (
-                        <p className="p-4 text-center text-[12px] text-gray-400 italic">Chưa có đơn nhập hàng nào.</p>
-                      ) : (
-                        <table className="w-full text-left">
-                          <thead><tr className="bg-gray-50/50 text-[#9d6b7a] text-[10px] font-bold uppercase tracking-wider border-b"><th className="py-2 px-3">Mã Đơn</th><th className="px-3">Trạng Thái Kho</th><th className="px-3 text-right">Tổng Tiền</th></tr></thead>
-                          <tbody>
-                            {supplierOrders.map(po => (
-                              <tr key={po.id} className="border-b border-gray-50 hover:bg-white transition-colors">
-                                <td className="py-2.5 px-3 font-bold text-[#D4AF37] text-[11px]">{po.code || `PO-${po.id}`}</td>
-                                <td className="px-3">
-                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${po.status === 'Chờ giao hàng' || po.status === 'Chờ duyệt' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
-                                    {po.status}
-                                  </span>
-                                </td>
-                                <td className="px-3 font-bold text-[#3d1a2e] text-[12px] text-right">{po.value.toLocaleString()} ₫</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      )}
-                    </div>
-                  )}
+        <div className="space-y-5 w-full">
+          <div style={glassCard} className="p-6">
+            {/* Hàng 2: Thao tác trên Bảng */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              {/* Cụm Tìm kiếm phía bên trái */}
+              <div className="flex-grow max-w-md relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                  <Search size={16} />
                 </div>
-              );
-            })
-          )}
+                <input 
+                  type="text" 
+                  value={supplierSearch}
+                  onChange={(e) => setSupplierSearch(e.target.value)}
+                  placeholder={language === 'vi' ? "Tìm kiếm nhà cung cấp..." : "Search suppliers..."}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/60 border border-gray-200 focus:border-[#10b981] rounded-xl text-[13px] font-medium outline-none transition-colors"
+                />
+              </div>
+
+              {/* Nút Thêm nhà cung cấp phía bên phải */}
+              <button 
+                onClick={() => setIsAddSupplierOpen(true)} 
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-[13px] transition-all hover:scale-105 shadow-md hover:shadow-emerald-500/20 active:scale-95 cursor-pointer shrink-0" 
+                style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
+              >
+                <Building size={16} /> {language === 'vi' ? 'Thêm Nhà Cung Cấp' : 'Add Supplier'}
+              </button>
+            </div>
+
+            {/* Grid nhà cung cấp */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+              {isLoading ? (
+                <div className="col-span-2 text-center py-10 text-[#9d6b7a]">Đang tải dữ liệu...</div>
+              ) : filteredSuppliers.length === 0 ? (
+                 <div className="col-span-2 text-center py-10 text-[#9d6b7a] bg-white/50 rounded-2xl border border-dashed border-gray-200 italic text-[13px]">
+                   {supplierSearch ? (language === 'vi' ? 'Không tìm thấy nhà cung cấp nào khớp với tìm kiếm.' : 'No suppliers matched your search.') : (language === 'vi' ? 'Chưa có dữ liệu nhà cung cấp nào.' : 'No suppliers found.')}
+                 </div>
+              ) : (
+                filteredSuppliers.map(s => {
+                  const supplierOrders = orders.filter(o => o.supplierId === s.id);
+                  const isExpanded = expandedSupplier === s.id;
+
+                  return (
+                    <div key={s.id} className="p-6 transition-all duration-300 bg-white/60 rounded-2xl border border-gray-100 hover:shadow-md hover:border-gray-200 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-4 mb-4 border-b border-gray-100 pb-4">
+                          <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-100"><Building color="#10b981" size={20}/></div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#3d1a2e] text-[15px]">{s.name}</p>
+                            <p className="text-[#9d6b7a] text-[11px] mt-0.5">ID: NCC-{s.id} • {s.createdAt || 'N/A'}</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center gap-3 text-[#6b4153] text-[12.5px]"><Phone size={13.5} color="#9d6b7a" /> {s.phone || "Chưa cập nhật SĐT"}</div>
+                          <div className="flex items-center gap-3 text-[#6b4153] text-[12.5px]"><Mail size={13.5} color="#9d6b7a" /> {s.email || "Chưa cập nhật Email"}</div>
+                          <div className="flex items-start gap-3 text-[#6b4153] text-[12.5px]"><MapPin size={13.5} color="#9d6b7a" className="shrink-0 mt-0.5" /> <span className="line-clamp-2">{s.address || "Chưa cập nhật địa chỉ"}</span></div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <button onClick={() => setExpandedSupplier(isExpanded ? null : s.id)} className="w-full flex items-center justify-between py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 transition-colors rounded-xl text-[12px] font-bold text-[#059669]">
+                          <span className="flex items-center gap-2"><Receipt size={14}/> Lịch sử nhập hàng ({supplierOrders.length})</span>
+                          {isExpanded ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
+                        </button>
+
+                        {isExpanded && (
+                          <div className="mt-3 bg-white rounded-xl border border-gray-100 overflow-hidden animate-in slide-in-from-top-2 fade-in">
+                            {supplierOrders.length === 0 ? (
+                              <p className="p-4 text-center text-[12px] text-gray-400 italic">Chưa có đơn nhập hàng nào.</p>
+                            ) : (
+                              <table className="w-full text-left">
+                                <thead>
+                                  <tr className="bg-gray-50 text-[#9d6b7a] text-[9px] font-black uppercase tracking-wider border-b"><th className="py-2 px-3">Mã Đơn</th><th className="px-3">Trạng Thái Kho</th><th className="px-3 text-right">Tổng Tiền</th></tr>
+                                </thead>
+                                <tbody>
+                                  {supplierOrders.map(po => (
+                                    <tr key={po.id} className="border-b border-gray-50 hover:bg-gray-50/55 transition-colors">
+                                      <td className="py-2 px-3 font-bold text-[#D4AF37] text-[11px]">{po.code || `PO-${po.id}`}</td>
+                                      <td className="px-3">
+                                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${po.status === 'Chờ giao hàng' || po.status === 'Chờ duyệt' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                                          {po.status}
+                                        </span>
+                                      </td>
+                                      <td className="px-3 font-bold text-[#3d1a2e] text-[11.5px] text-right">{po.value.toLocaleString()} ₫</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       )}
 
       {/* DANH SÁCH TẤT CẢ ĐƠN NHẬP HÀNG (PO) */}
       {activeTab === "orders" && (
-        <div style={glassCard} className="p-6">
-          <table className="w-full text-left">
-            <thead><tr className="text-[#9d6b7a] text-[11px] font-bold uppercase tracking-wider border-b border-[#D4AF37]/10"><th className="py-3 px-2">Hóa Đơn (PO)</th><th className="px-2">Nhà Cung Cấp</th><th className="px-2">Ngày Nhập</th><th className="px-2">Tổng Giá Trị</th><th className="px-2">Mã Phiếu Kho</th><th className="px-2 text-center">Trạng Thái Kho</th></tr></thead>
-            <tbody>
-              {orders.length === 0 ? (
-                <tr><td colSpan={6} className="py-8 text-center text-[#9d6b7a]">Chưa có đơn nhập hàng nào trong hệ thống.</td></tr>
-              ) : (
-                orders.map(po => (
-                  <tr key={po.id} className="border-b border-[#D4AF37]/5 hover:bg-[#D4AF37]/5 transition-colors">
-                    <td className="py-4 px-2 font-black text-[#D4AF37] text-[13px]">{po.code || `PO-${po.id}`}</td>
-                    <td className="px-2 font-bold text-[#3d1a2e] text-[13px]">{po.supplier}</td>
-                    <td className="px-2 text-[#6b4153] text-[13px]">{po.date}</td>
-                    <td className="px-2 font-bold text-[#3d1a2e] text-[14px]">{po.value.toLocaleString()} ₫</td>
-                    <td className="px-2 text-[#6b4153] text-[12px]">{po.ticketCode || 'N/A'}</td>
-                    {/* KHU VỰC THAY ĐỔI: Nhãn trạng thái thay vì nút bấm */}
-                    <td className="px-2 text-center">
-                       {po.status === 'Chờ giao hàng' || po.status === 'Chờ duyệt' ? (
-                          <span className="px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-600 rounded-full text-[10px] font-bold flex items-center justify-center gap-1.5 w-max mx-auto shadow-sm">
-                             <Clock size={12}/> {po.status}
-                          </span>
-                       ) : po.status === 'Đã hoàn tất' || po.status === 'Đã nhập xong' ? (
-                          <span className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full text-[10px] font-bold flex items-center justify-center gap-1.5 w-max mx-auto shadow-sm">
-                             <CheckCircle2 size={12}/> Đã nhập kho
-                          </span>
-                       ) : (
-                          <span className="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-500 rounded-full text-[10px] font-bold flex items-center justify-center gap-1.5 w-max mx-auto shadow-sm">
-                             {po.status}
-                          </span>
-                       )}
-                    </td>
+        <div className="space-y-5">
+          <div style={glassCard} className="p-6">
+            {/* Hàng 2: Thao tác trên Bảng */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              {/* Cụm Tìm kiếm phía bên trái */}
+              <div className="flex-grow max-w-md relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                  <Search size={16} />
+                </div>
+                <input 
+                  type="text" 
+                  value={orderSearch}
+                  onChange={(e) => handleOrderSearchChange(e.target.value)}
+                  placeholder={language === 'vi' ? "Tìm kiếm mã PO, nhà cung cấp, ngày nhập..." : "Search PO code, supplier, date..."}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/60 border border-gray-200 focus:border-[#D4AF37] rounded-xl text-[13px] font-medium outline-none transition-colors"
+                />
+              </div>
+
+              {/* Nút Tạo đơn nhập hàng phía bên phải */}
+              <button 
+                onClick={() => setIsAddPOOpen(true)} 
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-[13px] transition-all hover:scale-105 shadow-md hover:shadow-[#D4AF37]/20 active:scale-95 cursor-pointer shrink-0" 
+                style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)" }}
+              >
+                <Plus size={16} /> {t('proc.add_order')}
+              </button>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="text-[#9d6b7a] text-[11px] font-bold uppercase tracking-wider border-b border-[#D4AF37]/10">
+                    <th className="py-3 px-3">{t('proc.invoice_po')}</th>
+                    <th className="py-3 px-3">{t('proc.supplier')}</th>
+                    <th className="py-3 px-3">{t('proc.date_received')}</th>
+                    <th className="py-3 px-3">{t('proc.total_amount')}</th>
+                    <th className="py-3 px-3">{t('proc.ticket_code')}</th>
+                    <th className="py-3 px-3 text-center">{t('proc.warehouse_status')}</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {paginatedOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-[#9d6b7a] italic text-[13px]">
+                        {orderSearch ? (language === 'vi' ? 'Không tìm thấy đơn hàng nào khớp với tìm kiếm.' : 'No orders matched your search.') : t('proc.no_orders')}
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedOrders.map(po => (
+                      <tr key={po.id} className="border-b border-[#D4AF37]/5 hover:bg-[#D4AF37]/5 transition-colors">
+                        <td className="py-4 px-3 font-black text-[#D4AF37] text-[13px]">{po.code || `PO-${po.id}`}</td>
+                        <td className="py-4 px-3 font-bold text-[#3d1a2e] text-[13px]">{po.supplier}</td>
+                        <td className="py-4 px-3 text-[#6b4153] text-[13px]">{po.date}</td>
+                        <td className="py-4 px-3 font-bold text-[#3d1a2e] text-[14px]">{po.value.toLocaleString()} ₫</td>
+                        <td className="py-4 px-3 text-[#6b4153] text-[12.5px] font-mono">{po.ticketCode || 'N/A'}</td>
+                        <td className="py-4 px-3 text-center">
+                          {po.status === 'Chờ giao hàng' || po.status === 'Chờ duyệt' ? (
+                            <span className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-600 rounded-full text-[10px] font-bold flex items-center justify-center gap-1.5 w-max mx-auto shadow-sm">
+                              <Clock size={12}/> {t('proc.awaiting_delivery')}
+                            </span>
+                          ) : po.status === 'Đã hoàn tất' || po.status === 'Đã nhập xong' ? (
+                            <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full text-[10px] font-bold flex items-center justify-center gap-1.5 w-max mx-auto shadow-sm">
+                              <CheckCircle2 size={12}/> {t('proc.received')}
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 bg-gray-50 border border-gray-200 text-gray-500 rounded-full text-[10px] font-bold flex items-center justify-center gap-1.5 w-max mx-auto shadow-sm">
+                              {po.status}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer / Phân trang */}
+            {filteredOrders.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-5 border-t border-gray-100 text-[13px] text-[#9d6b7a]">
+                <div>
+                  {language === 'vi' ? (
+                    <span>Hiển thị: <strong>{Math.min(totalItems, (currentPage - 1) * itemsPerPage + 1)}-{Math.min(totalItems, currentPage * itemsPerPage)}</strong> / Tổng số <strong>{totalItems}</strong> đơn nhập hàng</span>
+                  ) : (
+                    <span>Showing: <strong>{Math.min(totalItems, (currentPage - 1) * itemsPerPage + 1)}-{Math.min(totalItems, currentPage * itemsPerPage)}</strong> of <strong>{totalItems}</strong> POs</span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 active:scale-95 disabled:opacity-40 disabled:scale-100 disabled:bg-gray-50 transition-all font-bold text-gray-500"
+                  >
+                    &lt;
+                  </button>
+                  {[...Array(totalPages)].map((_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="w-9 h-9 rounded-lg font-bold transition-all active:scale-95"
+                        style={{
+                          background: currentPage === pageNum ? "linear-gradient(135deg, #D4AF37, #C9A94E)" : "transparent",
+                          color: currentPage === pageNum ? "#fff" : "#6b4153",
+                          border: currentPage === pageNum ? "none" : "1px solid #e5e7eb",
+                          boxShadow: currentPage === pageNum ? "0 4px 12px rgba(212,175,55,0.2)" : "none"
+                        }}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button 
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 active:scale-95 disabled:opacity-40 disabled:scale-100 disabled:bg-gray-50 transition-all font-bold text-gray-500"
+                  >
+                    &gt;
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -477,7 +625,7 @@ export function Procurement() {
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               toast.type === "success" ? "bg-emerald-500/20" : "bg-rose-500/20"
             }`}>
-              {toast.type === "error" ? <AlertCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
+              {toast.type === "error" ? <XCircle className="text-rose-400" size={20} /> : <Sparkles className="text-[#D4AF37]" size={20} />}
             </div>
             <div>
               <p className="font-bold text-[15px]">{toast.type === "success" ? "Thành công" : "Lỗi hệ thống"}</p>
