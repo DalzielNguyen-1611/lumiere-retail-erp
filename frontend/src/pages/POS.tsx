@@ -21,7 +21,9 @@ import {
   ChevronDown,
   Package,
   Send,
-  MessageSquare
+  MessageSquare,
+  Sparkles,
+  X
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 
@@ -97,6 +99,19 @@ export function POS() {
   const [refillCart, setRefillCart] = useState<CartItem[]>([]);
   const [refillNote, setRefillNote] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error" | "info">("info");
+
+  const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+    setToastMessage(message);
+    setToastType(type);
+  };
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(""), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   // SALES CART STATE
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -248,7 +263,7 @@ export function POS() {
         });
         setShowNewCustomerForm(false);
       } else {
-        alert("Lỗi tạo khách hàng: " + json.message);
+        showToast(language === 'vi' ? "Lỗi tạo khách hàng: " + json.message : "Error creating customer: " + json.message, "error");
       }
     } catch (error) {
       console.error("Lỗi tạo KH:", error);
@@ -298,10 +313,10 @@ export function POS() {
           setPaymentMethod(null);
         }, 2500);
       } else {
-        alert("Lỗi từ CSDL Oracle: " + (json.message || 'Không xác định'));
+        showToast(language === 'vi' ? "Lỗi từ CSDL Oracle: " + (json.message || 'Không xác định') : "Oracle DB Error: " + (json.message || 'Unknown'), "error");
       }
     } catch (error) {
-      alert("Mất kết nối với Backend! Chi tiết: " + (error instanceof Error ? error.message : 'Không xác định'));
+      showToast(language === 'vi' ? "Mất kết nối với Backend! Chi tiết: " + (error instanceof Error ? error.message : 'Không xác định') : "Backend connection error! Details: " + (error instanceof Error ? error.message : 'Unknown'), "error");
     } finally {
       setIsProcessing(false); 
     }
@@ -319,12 +334,12 @@ export function POS() {
 
   const handlePrintReceipt = () => {
     if (cart.length === 0) {
-      alert("Giỏ hàng đang trống, không có gì để in!");
+      showToast(language === 'vi' ? "Giỏ hàng đang trống, không có gì để in!" : "Cart is empty, nothing to print!", "info");
       return;
     }
     const printWindow = window.open('', '_blank', 'width=400,height=600');
     if (!printWindow) {
-      alert("Vui lòng cho phép trình duyệt mở Popup để in hóa đơn!");
+      showToast(language === 'vi' ? "Vui lòng cho phép trình duyệt mở Popup để in hóa đơn!" : "Please allow browser popups to print receipt!", "info");
       return;
     }
 
@@ -414,9 +429,12 @@ export function POS() {
   const submitRefillRequest = () => {
     if (refillCart.length === 0) return;
     
-    // Bật thông báo Toast thay vì alert
-    setToastMessage("Đã gửi Yêu cầu nhập kho thành công tới phòng Kế toán!");
-    setTimeout(() => setToastMessage(""), 4000); // Tự động ẩn sau 4 giây
+    showToast(
+      language === 'vi' 
+        ? "Đã gửi Yêu cầu nhập kho thành công tới phòng Kế toán!" 
+        : "Refill request sent successfully to Accounting!", 
+      "success"
+    );
 
     setRefillCart([]);
     setRefillNote("");
@@ -448,10 +466,14 @@ export function POS() {
               style={{ border: "none", outline: "none", background: "transparent", color: "#3d1a2e", fontSize: "13px", flex: 1 }}
             />
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)" }}>
+          <button 
+            onClick={() => showToast(t('settings.coming_soon'), "info")}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-amber-500/5 active:scale-[0.98] transition-all cursor-pointer" 
+            style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)" }}
+          >
             <ScanLine size={15} color="#D4AF37" />
-            <span style={{ color: "#9d6b7a", fontSize: "12px" }}>{language === 'vi' ? 'Quét mã' : 'Scan'}</span>
-          </div>
+            <span style={{ color: "#9d6b7a", fontSize: "12px", fontWeight: 600 }}>{language === 'vi' ? 'Quét mã' : 'Scan'}</span>
+          </button>
         </div>
 
         {/* Category Tabs */}
@@ -883,24 +905,35 @@ export function POS() {
         </div>
       )}
 
-      {/* --- CUSTOM TOAST NOTIFICATION --- */}
+      {/* --- CUSTOM TOAST NOTIFICATION (STANDARDIZED) --- */}
       {toastMessage && (
-        <div 
-          className="fixed bottom-10 right-10 z-[100] flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl transition-all duration-300"
-          style={{ background: "#3d1a2e", border: "1px solid rgba(212,175,55,0.4)" }}
-        >
-          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(212,175,55,0.2)" }}>
-            <Package size={20} color="#D4AF37" />
+        <div className="fixed top-24 right-8 z-[100] animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="bg-[#3d1a2e] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 min-w-[320px] border border-white/10">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              toastType === 'error' ? 'bg-rose-500/20' : toastType === 'success' ? 'bg-emerald-500/20' : 'bg-amber-500/20'
+            }`}>
+              {toastType === 'error' ? (
+                <XCircle size={20} className="text-rose-400" />
+              ) : toastType === 'success' ? (
+                <CheckCircle2 size={20} className="text-emerald-400" />
+              ) : (
+                <Sparkles size={20} className="text-[#D4AF37]" />
+              )}
+            </div>
+            <div>
+              <p className="font-bold text-[15px]">
+                {toastType === 'error' 
+                  ? (language === 'vi' ? 'Lỗi' : 'Error') 
+                  : toastType === 'success' 
+                    ? (language === 'vi' ? 'Thành công' : 'Success') 
+                    : (language === 'vi' ? 'Thông báo' : 'Notification')}
+              </p>
+              <p className="text-white/80 text-[13px] mt-0.5">{toastMessage}</p>
+            </div>
+            <button onClick={() => setToastMessage("")} className="ml-auto text-white/40 hover:text-white transition-colors cursor-pointer">
+              <X size={18} />
+            </button>
           </div>
-          <div>
-            <h4 style={{ color: "#D4AF37", fontSize: "14px", fontWeight: 700 }}>Thông báo hệ thống</h4>
-            <p style={{ color: "rgba(255,255,255,0.9)", fontSize: "12px", marginTop: 2, maxWidth: "250px" }} className="line-clamp-2">
-              {toastMessage}
-            </p>
-          </div>
-          <button onClick={() => setToastMessage("")} style={{ color: "#9d6b7a", marginLeft: 10 }} className="hover:text-white transition-colors cursor-pointer">
-            <XCircle size={18} />
-          </button>
         </div>
       )}
 

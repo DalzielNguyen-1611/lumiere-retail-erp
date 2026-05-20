@@ -30,38 +30,6 @@
 
 ---
 
-## 🧭 Cấu Trúc Thư Mục Hệ Thống
-
-```text
-IS210-Database-Management-System/   (Thư mục gốc dự án)
-│
-├── frontend/                        # Mã nguồn ứng dụng Client (Vite + React)
-│   ├── src/
-│   │   ├── components/              # Các UI component dùng chung (Sidebar, Layout...)
-│   │   ├── context/                 # Quản lý Trạng thái ngôn ngữ, Xác thực người dùng
-│   │   ├── pages/                   # Giao diện chính (POS, HR, Finance, Procurement, Returns...)
-│   │   └── main.tsx                 # Điểm khởi chạy React app
-│   ├── vite.config.ts               # Cấu hình đóng gói Vite
-│   └── package.json
-│
-├── backend/                         # Mã nguồn máy chủ API (Node.js + Express)
-│   ├── src/
-│   │   ├── modules/                 # Phân chia nghiệp vụ (Auth, HR, POS, Finance...)
-│   │   └── main.ts                  # Khởi chạy Express server
-│   ├── .env                         # Cấu hình kết nối DB và JWT Secret Key
-│   └── package.json
-│
-└── database/                        # Cơ sở dữ liệu Oracle PL/SQL
-    ├── schema/
-    │   └── db.sql                   # Mã lệnh khởi tạo 27 bảng dữ liệu quan hệ
-    ├── procedures.sql               # Các Stored Procedure (Duyệt đổi trả, lương, thuế...)
-    ├── trigger.sql                  # Các ràng buộc, tự động tính toán tồn kho, kế toán
-    ├── fuction.sql                  # Các hàm tiện ích tính toán
-    └── constraint.sql               # Các ràng buộc toàn vẹn dữ liệu
-```
-
----
-
 ## 💼 Các Phân Hệ Nghiệp Vụ Chính (Modules)
 
 ### 1. 🛒 Bán Hàng Tại Quầy (POS & CRM)
@@ -96,17 +64,6 @@ IS210-Database-Management-System/   (Thư mục gốc dự án)
 ### 8. 📊 Tài Chính Kế Toán (Finance Ledger)
 * Quản lý danh sách tài khoản kế toán doanh nghiệp (`TAI_KHOAN`).
 * Nhật ký giao dịch kép (`GIAO_DICH_TIEN`) tự động ghi nhận khi phát sinh các sự kiện bán hàng, mua hàng, trả lương, hoàn tiền.
-
----
-
-## 🔑 Tài Khoản Khảo Sát Hệ Thống
-
-| Tài Khoản | Mật Khẩu | Vai Trò (Role) | Chức Năng Khảo Sát Phù Hợp |
-| :--- | :--- | :--- | :--- |
-| **`admin`** | `123456` | Quản trị viên tối cao | Toàn quyền kiểm soát hệ thống, cấu hình đa cửa hàng, nhân sự. |
-| **`sales_hn`** | `123456` | Nhân viên bán hàng | Thao tác POS bán hàng, đổi trả hàng hóa, chấm công ca làm việc. |
-| **`warehouse_hn`** | `123456` | Thủ kho chi nhánh | Quản lý tồn kho, nhập hàng mua (PO), luân chuyển kho hàng. |
-| **`accounting_hn`** | `123456` | Kế toán viên | Quản lý dòng tiền sổ cái, bảng lương, thanh toán đơn nhập hàng. |
 
 ---
 

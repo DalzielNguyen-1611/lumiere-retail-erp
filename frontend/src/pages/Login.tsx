@@ -367,33 +367,51 @@ export function Login() {
       {/* ── Forgot Password Modal ──────────────────────────────────────────── */}
       {showForgot && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }}
+          className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-300"
+          style={{ background: "rgba(45,16,32,0.6)", backdropFilter: "blur(12px)" }}
         >
           <div
-            className="rounded-2xl p-8 text-center max-w-sm w-full mx-4"
+            className="rounded-3xl p-8 text-center max-w-sm w-full mx-4 transform scale-100 transition-all duration-300"
             style={{
-              background: "rgba(255,255,255,0.14)",
-              backdropFilter: "blur(40px)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.4)",
+              background: "rgba(61, 26, 46, 0.85)",
+              backdropFilter: "blur(50px)",
+              WebkitBackdropFilter: "blur(50px)",
+              border: "1px solid rgba(212, 175, 55, 0.3)",
+              boxShadow: "0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
             }}
           >
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: "rgba(212,175,55,0.2)", border: "1px solid rgba(212,175,55,0.4)" }}
+              className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
+              style={{ 
+                background: "rgba(212,175,55,0.15)", 
+                border: "1px solid rgba(212,175,55,0.45)",
+                boxShadow: "0 0 20px rgba(212,175,55,0.25)"
+              }}
             >
               <Lock size={24} color="#D4AF37" />
             </div>
-            <h3 style={{ color: "white", fontSize: "18px", fontWeight: 700, marginBottom: 8 }}>Đặt lại mật khẩu</h3>
+            
+            <h3 className="text-white text-[19px] font-bold mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+              Đặt lại mật khẩu
+            </h3>
+            
+            <p className="text-[13.5px] text-white/80 leading-relaxed mb-4 font-medium px-2">
               Vui lòng liên hệ với quản trị viên hệ thống để đặt lại mật khẩu của bạn.
-            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "11px", marginBottom: 20 }}>
+            </p>
+            
+            <p className="text-[14px] text-[#D4AF37] font-bold mb-6 flex items-center justify-center gap-1.5">
               📧 admin@lumiere.vn
             </p>
+            
             <button
               onClick={() => setShowForgot(false)}
-              className="w-full py-3 rounded-xl"
-              style={{ background: "linear-gradient(135deg, #D4AF37, #C9A94E)", color: "white", fontWeight: 700, fontSize: "13px" }}
+              className="w-full py-3.5 rounded-xl font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              style={{ 
+                background: "linear-gradient(135deg, #D4AF37 0%, #C9A94E 50%, #B8941F 100%)", 
+                color: "white", 
+                fontSize: "13.5px",
+                boxShadow: "0 8px 24px rgba(212, 175, 55, 0.35)"
+              }}
             >
               Đóng
             </button>
