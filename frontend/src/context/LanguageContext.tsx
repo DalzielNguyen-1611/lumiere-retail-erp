@@ -24,7 +24,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Sidebar
     'nav.dashboard': 'Dashboard',
     'nav.pos': 'Bán hàng (POS)',
-    'nav.customers': 'Đối tác',
+    'nav.customers': 'Khách hàng',
     'nav.inventory': 'Tồn kho',
     'nav.returns': 'Đổi trả',
     'nav.logistics': 'Phiếu kho',
@@ -317,7 +317,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Sidebar
     'nav.dashboard': 'Dashboard',
     'nav.pos': 'Sales (POS)',
-    'nav.customers': 'Partners',
+    'nav.customers': 'Customers',
     'nav.inventory': 'Inventory',
     'nav.returns': 'Returns',
     'nav.logistics': 'Inventory Receipts',

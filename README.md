@@ -14,9 +14,9 @@
 ## 👥 Thành Viên Thực Hiện
 
 * **Nguyễn Đoàn Đức Hiếu** - *24520500* (Nhóm trưởng)
-* **Nguyễn Nữ Trà Giang** - *2452xxxx*
-* **Lê Thị Bích Duyên** - *2452xxxx*
-* **Hồ Thị Thùy Dung** - *2452xxxx*
+* **Nguyễn Nữ Trà Giang** - *24520418*
+* **Lê Thị Bích Duyên** - *24520406*
+* **Hồ Thị Thùy Dung** - *24520334*
 
 ---
 

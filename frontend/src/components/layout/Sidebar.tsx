@@ -20,7 +20,7 @@ interface NavItemDef {
 const mainNavItems: (NavItemDef & { tKey: string })[] = [
   { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tKey: "nav.dashboard", roles: ["admin", "manager", "accounting", "warehouse"] },
   { path: "/pos", icon: Monitor, label: "Bán hàng (POS)", tKey: "nav.pos", roles: ["admin", "sales"] },
-  { path: "/customers", icon: Users, label: "Đối tác", tKey: "nav.customers", roles: ["admin", "manager", "sales", "accounting"] },
+  { path: "/customers", icon: Users, label: "Khách hàng", tKey: "nav.customers", roles: ["admin", "manager", "sales", "accounting"] },
   { path: "/inventory", icon: Package, label: "Tồn kho", tKey: "nav.inventory", roles: ["admin", "manager", "warehouse", "accounting"] },
   { path: "/returns", icon: CornerUpLeft, label: "Đổi trả", tKey: "nav.returns", roles: ["admin", "manager", "sales", "warehouse", "accounting"] },
   { path: "/logistics", icon: Truck, label: "Phiếu kho", tKey: "nav.logistics", roles: ["admin", "warehouse"] },
