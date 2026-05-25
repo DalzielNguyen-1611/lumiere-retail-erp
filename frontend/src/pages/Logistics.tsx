@@ -4,7 +4,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { ArrowRight, CheckCircle2, Plus, Clock, PackageCheck, XCircle, FileText, Search, X, Sparkles, AlertCircle } from "lucide-react";
 
 const glassCard = { background: "rgba(255,255,255,0.72)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(61,26,46,0.06)", borderRadius: "20px" };
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "http://localhost:5001";
 
 export function Logistics() {
   const { t, language } = useLanguage();
@@ -187,10 +187,16 @@ export function Logistics() {
                       <FileText size={16} className="text-[#D4AF37]/70"/> {r.id}
                     </td>
                     <td className="px-3 font-bold text-[#3d1a2e] text-[13px]">{r.type}</td>
-                    <td className="px-3 text-[#6b4153] text-[13px]">{r.partner || r.fromWarehouse}</td>
+                    <td className="px-3 text-[#6b4153] text-[13px]">
+                      {r.type === 'Xuất kho bán hàng' || r.type === 'Xuất kho'
+                        ? r.fromWarehouse
+                        : (r.type === 'Nhập kho' ? (r.partner || 'N/A') : r.fromWarehouse)}
+                    </td>
                     <td className="px-3 font-bold text-[#3d1a2e] text-[13px] flex items-center gap-1.5">
-                      {r.fromWarehouse !== 'N/A' && r.fromWarehouse !== null && <ArrowRight size={14} className="text-[#9d6b7a]"/>} 
-                      {r.toWarehouse}
+                      <ArrowRight size={14} className="text-[#9d6b7a]"/>
+                      {r.type === 'Xuất kho bán hàng' || r.type === 'Xuất kho'
+                        ? (r.partner || (language === 'vi' ? 'Khách lẻ' : 'Retail Customer'))
+                        : (r.type === 'Nhập kho' ? r.toWarehouse : r.toWarehouse)}
                     </td>
                     <td className="px-3 text-[#6b4153] text-[13px]">{r.date}</td>
                     <td className="px-3 font-bold text-[#3d1a2e] text-[13px] text-right">
@@ -205,7 +211,7 @@ export function Logistics() {
                         >
                           <PackageCheck size={16}/> {t('log.confirm_intake')}
                         </button>
-                      ) : r.status === 'Đã hoàn tất' || r.status === 'Đã nhập xong' ? (
+                      ) : r.status === 'Đã hoàn tất' || r.status === 'Đã nhập xong' || r.status === 'Đã xuất' ? (
                         <span className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full text-[11px] font-bold flex items-center justify-center gap-1.5 w-max mx-auto shadow-sm">
                           <CheckCircle2 size={14}/> {t('log.completed')}
                         </span>

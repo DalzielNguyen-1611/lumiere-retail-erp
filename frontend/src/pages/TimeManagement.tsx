@@ -16,7 +16,7 @@ const glassCard = {
   borderRadius: "24px" 
 };
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "http://localhost:5001";
 
 const formatTimeWithSeconds = (date: Date) => {
   const pad = (num: number) => num.toString().padStart(2, "0");
@@ -323,11 +323,6 @@ export function TimeManagement() {
 
                   {/* Chân đế cho nút bấm */}
                   <div className="pt-4 border-t border-gray-100 flex flex-col items-center text-center gap-1.5">
-                    <p className="text-[11px] text-gray-400 italic leading-snug">
-                      {language === 'vi' 
-                        ? 'Hệ thống tự động ghi nhận vị trí IP và thời gian thực lúc bấm nút.' 
-                        : 'System automatically logs IP location and real-time upon clicking.'}
-                    </p>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
                       <span>📍</span>
                       <span>

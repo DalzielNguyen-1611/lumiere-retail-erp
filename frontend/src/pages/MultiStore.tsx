@@ -32,7 +32,7 @@ export function MultiStore() {
   const fetchBranches = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('http://localhost:5000/api/stores/branches');
+      const res = await fetch('http://localhost:5001/api/stores/branches');
       const data = await res.json();
       if (data.status === 'success') {
         setBranches(data.data);
@@ -211,4 +211,4 @@ export function MultiStore() {
       )}
     </div>
   );
-}
+}

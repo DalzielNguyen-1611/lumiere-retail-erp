@@ -19,7 +19,7 @@ const glassCard = {
   borderRadius: "20px" 
 };
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "http://localhost:5001";
 
 const getImageUrl = (imagePath: string) => {
   if (!imagePath) return "/placeholder.png";

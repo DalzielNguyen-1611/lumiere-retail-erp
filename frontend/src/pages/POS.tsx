@@ -78,7 +78,7 @@ const glassPanel = {
   boxShadow: "0 8px 32px rgba(61,26,46,0.08)",
 };
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "http://localhost:5001";
 
 const getImageUrl = (imagePath: string) => {
   if (!imagePath) return "/placeholder.png";
@@ -129,7 +129,7 @@ export function POS() {
   const fetchProducts = async () => {
     try {
       setIsLoadingProducts(true);
-      const response = await fetch('http://localhost:5000/api/products'); 
+      const response = await fetch('http://localhost:5001/api/products'); 
       const json = await response.json();
       
       if (json.status === 'success') {
@@ -215,7 +215,7 @@ export function POS() {
   const searchCustomer = async () => {
     if (!customerPhone.trim()) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/customers/search?phone=${customerPhone}`);
+      const response = await fetch(`http://localhost:5001/api/customers/search?phone=${customerPhone}`);
       const json = await response.json();
 
       if (json.status === 'success') {
@@ -246,7 +246,7 @@ export function POS() {
     if (!newCustomerName.trim()) return;
     setIsCreatingCustomer(true);
     try {
-      const response = await fetch('http://localhost:5000/api/customers', {
+      const response = await fetch('http://localhost:5001/api/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newCustomerName, phone: customerPhone }),
@@ -285,7 +285,7 @@ export function POS() {
       const customerId = selectedCustomer?.id ? parseInt(selectedCustomer.id) : 1;
       const payload = { cart: cart, total: total, customerId: customerId, phuongThuc: method };
 
-      const response = await fetch('http://localhost:5000/api/orders/charge', {
+      const response = await fetch('http://localhost:5001/api/orders/charge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

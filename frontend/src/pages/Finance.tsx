@@ -15,7 +15,7 @@ const glassCard = {
   boxShadow: "0 8px 32px rgba(61,26,46,0.06)", 
   borderRadius: "24px" 
 };
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "http://localhost:5001";
 
 interface AccountBalance { id: number; name: string; type: string; balance: number; purpose: string; }
 interface Transaction { id: string; desc: string; amount: number; date: string; accountName: string; }

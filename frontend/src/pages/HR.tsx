@@ -49,7 +49,7 @@ const translateRole = (role: string, language: string) => {
 };
 
 const deptColors: Record<string, string> = { "Quản lý": "#D4AF37", "Kế toán": "#3b82f6", "Bán hàng": "#C084FC", "Kho vận": "#4ade80", Default: "#94a3b8" };
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "http://localhost:5001";
 
 // Modal tính toán chi tiết (Tách ra ngoài để tránh flickering khi re-render)
 const CalculationModal = ({ emp, onClose, onConfirm }: { emp: any, onClose: () => void, onConfirm: (emp: any) => void }) => {

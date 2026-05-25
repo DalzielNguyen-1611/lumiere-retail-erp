@@ -60,7 +60,7 @@ export function Customers() {
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/partners");
+      const response = await fetch("http://localhost:5001/api/partners");
       const json = await response.json();
       if (json.status === "success" && Array.isArray(json.data)) {
         // CHỈ LỌC KHÁCH HÀNG
@@ -95,7 +95,7 @@ export function Customers() {
     try {
       // Gán cứng type là Khách hàng
       const payload = { ...newCustomer, type: "Khách hàng" };
-      const res = await fetch("http://localhost:5000/api/partners", {
+      const res = await fetch("http://localhost:5001/api/partners", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -116,7 +116,7 @@ export function Customers() {
     
     setIsUpdating(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/partners/${selectedCustomer.id}`, {
+      const res = await fetch(`http://localhost:5001/api/partners/${selectedCustomer.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(selectedCustomer)

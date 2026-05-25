@@ -18,7 +18,7 @@ const statusStyle: Record<string, { bg: string; color: string; dot: string }> = 
   "Out of Stock": { bg: "rgba(244,63,94,0.1)", color: "#dc2626", dot: "#f43f5e" },
 };
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "http://localhost:5001";
 
 const getImageUrl = (imagePath: string) => {
   if (!imagePath) return "/placeholder.png";
@@ -56,7 +56,7 @@ export function Inventory() {
   const fetchInventory = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/inventory/products'); 
+      const response = await fetch('http://localhost:5001/api/inventory/products'); 
       const json = await response.json();
       if (json.status === 'success') {
         setProducts(json.data);
@@ -79,7 +79,7 @@ export function Inventory() {
     }
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:5000/api/products', {
+      const response = await fetch('http://localhost:5001/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProduct)

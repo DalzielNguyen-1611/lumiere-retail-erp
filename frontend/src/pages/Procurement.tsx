@@ -5,7 +5,7 @@ import { Building, Truck, Plus, X, CheckCircle2, XCircle, Mail, MapPin, Phone, R
 import { useAuth } from "../context/AuthContext"; 
 
 const glassCard = { background: "rgba(255,255,255,0.72)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(61,26,46,0.06)", borderRadius: "20px" };
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "http://localhost:5001";
 
 const getImageUrl = (imagePath: string) => {
   if (!imagePath) return "/placeholder.png";

@@ -13,10 +13,84 @@
 
 ## 👥 Thành Viên Thực Hiện
 
-* **Nguyễn Đoàn Đức Hiếu** - *24520500* (Nhóm trưởng)
-* **Nguyễn Nữ Trà Giang** - *24520418*
-* **Lê Thị Bích Duyên** - *24520406*
-* **Hồ Thị Thùy Dung** - *24520334*
+* **Nguyễn Nữ Trà Giang** - *24520418* (Nhóm trưởng)
+* **Nguyễn Đoàn Đức Hiếu** - *24520500*
+* **Nguyễn Tấn Phát** - *24521307*
+* **Trần Nhụy Tam Tử Phục** - *24521400*
+
+---
+
+## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy
+
+### Bước 1: Cấu hình Cơ sở dữ liệu Oracle Database (Trực tiếp qua SQL Developer)
+1. **Kết nối vào cơ sở dữ liệu bằng quyền quản trị tối cao:**
+   * Mở ứng dụng **Oracle SQL Developer**.
+   * Thiết lập một kết nối mới với tài khoản `SYS` (chọn Role là `SYSDBA`), kết nối đến database local của bạn (Host: `localhost`, Port: `1521`, SID: `xe` hoặc Service Name: `orcl`).
+2. **Khởi tạo User mới và cấp đặc quyền quản trị:**
+   Mở một cửa sổ SQL Worksheet của kết nối SYSDBA vừa tạo và thực thi đoạn lệnh sau để cấp quyền đầy đủ:
+   ```sql
+   -- Chuyển sang Pluggable Database (nếu sử dụng phiên bản Oracle Multitenant)
+   ALTER SESSION SET CONTAINER = ORCLPDB1; 
+   
+   -- Tạo user và thiết lập mật khẩu truy cập
+   CREATE USER PROJECT_IS_210 IDENTIFIED BY 123456;
+   
+   -- Cấp quyền kết nối, tài nguyên và đặc quyền quản trị (DBA)
+   GRANT CONNECT, RESOURCE, DBA TO PROJECT_IS_210;
+   
+   -- Cấp hạn mức lưu trữ không giới hạn cho user trên Tablespace
+   ALTER USER PROJECT_IS_210 QUOTA UNLIMITED ON USERS;
+   ```
+3. **Thực thi lần lượt các tệp lệnh SQL để tạo cấu trúc dữ liệu:**
+   * Tạo một kết nối mới trong **SQL Developer** bằng User vừa tạo (`PROJECT_IS_210` / `123456`).
+   * Mở và thực thi lần lượt các file script SQL trong thư mục `/database` trên Worksheet của kết nối mới này:
+     * Chạy tệp `schema/db.sql` để khởi tạo cấu trúc bảng.
+     * Chạy tệp `constraint.sql` để áp dụng các ràng buộc.
+     * Chạy tệp `fuction.sql`, `trigger.sql` và `procedures.sql` để nạp các hàm, trigger nghiệp vụ.
+
+### Bước 2: Cài đặt và Khởi chạy API Backend
+1. Di chuyển vào thư mục backend:
+   ```bash
+   cd backend
+   ```
+2. Cài đặt các gói phụ thuộc cơ bản:
+   ```bash
+   npm install
+   ```
+3. Cài đặt thư viện kết nối cơ sở dữ liệu Oracle (Oracledb) bắt buộc:
+   ```bash
+   npm install oracledb
+   ```
+4. Sao chép cấu hình môi trường: Tạo tệp `.env` trong thư mục `backend/` với nội dung:
+   ```env
+   PORT=5000
+   JWT_SECRET=Lumiere_Secret_Key_2026
+   DB_HOST=localhost
+   DB_PORT=1521
+   DB_USERNAME=PROJECT_IS_210
+   DB_PASSWORD=123456
+   DB_SERVICE_NAME=ORCLPDB1
+   ```
+5. Khởi chạy Server ở chế độ phát triển:
+   ```bash
+   npm run dev
+   ```
+   *(API chạy tại: `http://localhost:5000`)*
+
+### Bước 3: Cài đặt và Khởi chạy Giao diện Frontend
+1. Di chuyển vào thư mục frontend:
+   ```bash
+   cd ../frontend
+   ```
+2. Cài đặt các gói phụ thuộc:
+   ```bash
+   npm install
+   ```
+3. Khởi chạy Client:
+   ```bash
+   npm run dev
+   ```
+   *(Giao diện chạy tại: `http://localhost:5173` hoặc `http://localhost:5174`)*
 
 ---
 
@@ -64,37 +138,6 @@
 ### 8. 📊 Tài Chính Kế Toán (Finance Ledger)
 * Quản lý danh sách tài khoản kế toán doanh nghiệp (`TAI_KHOAN`).
 * Nhật ký giao dịch kép (`GIAO_DICH_TIEN`) tự động ghi nhận khi phát sinh các sự kiện bán hàng, mua hàng, trả lương, hoàn tiền.
-
----
-
-## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy
-
-### Bước 1: Cấu hình Cơ sở dữ liệu Oracle Database
-1. Khởi chạy Oracle Database và tạo một User mới (Ví dụ: `PROJECT_IS_210` / `123456`).
-2. Thực thi lần lượt các tệp lệnh SQL trong thư mục `/database`:
-   * Chạy `schema/db.sql` để khởi tạo cấu trúc bảng.
-   * Chạy `constraint.sql` để áp dụng các ràng buộc.
-   * Chạy `fuction.sql`, `trigger.sql` và `procedures.sql` để nạp các hàm, trigger nghiệp vụ.
-
-### Bước 2: Cài đặt và Khởi chạy API Backend
-1. Di chuyển vào thư mục backend: `cd backend`
-2. Cài đặt các gói phụ thuộc: `npm install`
-3. Sao chép cấu hình môi trường: Tạo tệp `.env` trong thư mục `backend/` với nội dung:
-   ```env
-   PORT=5000
-   JWT_SECRET=Lumiere_Secret_Key_2026
-   DB_HOST=localhost
-   DB_PORT=1521
-   DB_USERNAME=PROJECT_IS_210
-   DB_PASSWORD=123456
-   DB_SERVICE_NAME=DMSandITPM
-   ```
-4. Khởi chạy Server ở chế độ phát triển: `npm run dev` (API chạy tại: `http://localhost:5000`)
-
-### Bước 3: Cài đặt và Khởi chạy Giao diện Frontend
-1. Di chuyển vào thư mục frontend: `cd ../frontend`
-2. Cài đặt các gói phụ thuộc: `npm install`
-3. Khởi chạy Client: `npm run dev` (Giao diện chạy tại: `http://localhost:5174` hoặc `http://localhost:5173`)
 
 ---
 🇻🇳 *Bản quyền thuộc về Nhóm phát triển Dự án Hệ thống quản trị doanh nghiệp Lumière ERP - Đại học Công nghệ Thông tin - ĐHQG TP.HCM.*

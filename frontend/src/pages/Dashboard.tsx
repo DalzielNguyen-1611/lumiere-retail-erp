@@ -22,7 +22,7 @@ const glassCard = {
 };
 
 const COLORS = ['#D4AF37', '#3d1a2e', '#c9a0b0', '#10b981', '#3b82f6'];
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "http://localhost:5001";
 
 export function Dashboard() {
   const { t, language } = useLanguage();
