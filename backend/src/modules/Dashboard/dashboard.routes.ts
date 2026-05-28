@@ -27,16 +27,78 @@ router.get('/', async (req: Request, res: Response) => {
     const kpiRes = await connection.execute(kpiSql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
     const kpiData = (kpiRes.rows as any[])[0] || { TOTAL_REVENUE: 0, NEW_ORDERS: 0, TOTAL_CUSTOMERS: 0 };
 
-    // 2. LẤY DOANH THU 6 THÁNG GẦN NHẤT
-    const revSql = `
-      SELECT TO_CHAR(NGAYTAO, 'MM/YYYY') as "name", SUM(TONGTIENTAMTINH) as "value"
-      FROM DON_HANG
-      GROUP BY TO_CHAR(NGAYTAO, 'MM/YYYY'), TRUNC(NGAYTAO, 'MM')
-      ORDER BY TRUNC(NGAYTAO, 'MM') DESC
-      FETCH FIRST 6 ROWS ONLY
-    `;
-    const revRes = await connection.execute(revSql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
-    const revenueData = (revRes.rows || []).reverse();
+    // 2. LẤY DOANH THU THEO KHOẢNG THỜI GIAN (7 ngày, 6 tháng, 5 năm)
+    const range = req.query.range || '6months';
+    let revenueData = [];
+
+    if (range === '7days') {
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dayStr = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+        days.push({ name: dayStr, value: 0 });
+      }
+
+      const revSql = `
+        SELECT TO_CHAR(NGAYTAO, 'DD/MM') as "name", SUM(TONGTIENTAMTINH) as "value"
+        FROM DON_HANG
+        WHERE NGAYTAO >= TRUNC(SYSDATE) - 6
+        GROUP BY TO_CHAR(NGAYTAO, 'DD/MM'), TRUNC(NGAYTAO)
+        ORDER BY TRUNC(NGAYTAO) ASC
+      `;
+      const revRes = await connection.execute(revSql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+      const dbRows = revRes.rows || [];
+      revenueData = days.map(d => {
+        const match = dbRows.find((row: any) => row.name === d.name);
+        return match ? { name: d.name, value: match.value } : d;
+      });
+
+    } else if (range === '5years') {
+      const years = [];
+      const currentYear = new Date().getFullYear();
+      for (let i = 4; i >= 0; i--) {
+        years.push({ name: String(currentYear - i), value: 0 });
+      }
+
+      const revSql = `
+        SELECT TO_CHAR(NGAYTAO, 'YYYY') as "name", SUM(TONGTIENTAMTINH) as "value"
+        FROM DON_HANG
+        WHERE NGAYTAO >= ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), -48)
+        GROUP BY TO_CHAR(NGAYTAO, 'YYYY'), TRUNC(NGAYTAO, 'YYYY')
+        ORDER BY TRUNC(NGAYTAO, 'YYYY') ASC
+      `;
+      const revRes = await connection.execute(revSql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+      const dbRows = revRes.rows || [];
+      revenueData = years.map(y => {
+        const match = dbRows.find((row: any) => row.name === y.name);
+        return match ? { name: y.name, value: match.value } : y;
+      });
+
+    } else {
+      // Mặc định: 6months
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const monthStr = String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+        months.push({ name: monthStr, value: 0 });
+      }
+
+      const revSql = `
+        SELECT TO_CHAR(NGAYTAO, 'MM/YYYY') as "name", SUM(TONGTIENTAMTINH) as "value"
+        FROM DON_HANG
+        WHERE NGAYTAO >= ADD_MONTHS(TRUNC(SYSDATE, 'MM'), -5)
+        GROUP BY TO_CHAR(NGAYTAO, 'MM/YYYY'), TRUNC(NGAYTAO, 'MM')
+        ORDER BY TRUNC(NGAYTAO, 'MM') ASC
+      `;
+      const revRes = await connection.execute(revSql, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+      const dbRows = revRes.rows || [];
+      revenueData = months.map(m => {
+        const match = dbRows.find((row: any) => row.name === m.name);
+        return match ? { name: m.name, value: match.value } : m;
+      });
+    }
 
     // 3. CƠ CẤU NGÀNH HÀNG (Tỷ trọng theo Thương hiệu - LẤY TOÀN BỘ CÁC THƯƠNG HIỆU CÓ DOANH THU TRONG CSDL)
     const catSql = `

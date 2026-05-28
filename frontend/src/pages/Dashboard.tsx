@@ -89,11 +89,13 @@ export function Dashboard() {
     totalShiftStaff: 8
   });
 
+  const [selectedRange, setSelectedRange] = useState("6months");
+
   // --- FETCH API TỪ BACKEND ---
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/dashboard`);
+        const res = await fetch(`${BACKEND_URL}/api/dashboard?range=${selectedRange}`);
         if (!res.ok) throw new Error("Lỗi máy chủ");
         const json = await res.json();
         
@@ -123,7 +125,7 @@ export function Dashboard() {
       }
     };
     fetchDashboardData();
-  }, []);
+  }, [selectedRange]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -237,9 +239,31 @@ export function Dashboard() {
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-[#3d1a2e] text-[17px] font-bold flex items-center gap-2">
-                    <Activity size={20} color="#D4AF37"/> {language === 'vi' ? 'Xu hướng Doanh thu (6 tháng gần nhất)' : 'Revenue Trend (Last 6 Months)'}
+                    <Activity size={20} color="#D4AF37"/>{' '}
+                    {selectedRange === '7days'
+                      ? (language === 'vi' ? 'Xu hướng Doanh thu (7 ngày qua)' : 'Revenue Trend (Last 7 Days)')
+                      : selectedRange === '5years'
+                        ? (language === 'vi' ? 'Xu hướng Doanh thu (5 năm qua)' : 'Revenue Trend (Last 5 Years)')
+                        : (language === 'vi' ? 'Xu hướng Doanh thu (6 tháng gần nhất)' : 'Revenue Trend (Last 6 Months)')}
                   </h2>
                   <p className="text-[#9d6b7a] text-[12px] mt-0.5">{language === 'vi' ? 'Dữ liệu doanh thu bán lẻ tại quầy và trị giá đơn hàng POS' : 'Counter retail and POS store sales revenue data'}</p>
+                </div>
+                <div>
+                  <select
+                    value={selectedRange}
+                    onChange={(e) => setSelectedRange(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl outline-none border transition-all text-[12px] font-bold cursor-pointer"
+                    style={{
+                      background: "rgba(255,255,255,0.8)",
+                      borderColor: "rgba(212,175,55,0.25)",
+                      color: "#3d1a2e",
+                      boxShadow: "0 2px 8px rgba(61,26,46,0.04)"
+                    }}
+                  >
+                    <option value="7days">{language === 'vi' ? '7 ngày trước' : 'Last 7 Days'}</option>
+                    <option value="6months">{language === 'vi' ? '6 tháng qua' : 'Last 6 Months'}</option>
+                    <option value="5years">{language === 'vi' ? '5 năm qua' : 'Last 5 Years'}</option>
+                  </select>
                 </div>
               </div>
               

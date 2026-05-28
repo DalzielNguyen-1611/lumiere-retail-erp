@@ -169,8 +169,18 @@ export function POS() {
 
   // Calculations
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const tax = subtotal * VAT_RATE;
-  const total = subtotal + tax;
+
+  const discountRate = useMemo(() => {
+    if (!selectedCustomer) return 0;
+    if (selectedCustomer.tier === "Silver") return 0.05;
+    if (selectedCustomer.tier === "Gold") return 0.10;
+    if (selectedCustomer.tier === "VIP") return 0.15;
+    return 0;
+  }, [selectedCustomer]);
+
+  const discountAmount = subtotal * discountRate;
+  const tax = (subtotal - discountAmount) * VAT_RATE;
+  const total = (subtotal - discountAmount) + tax;
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
   const refillCount = refillCart.reduce((sum, item) => sum + item.qty, 0);
 
@@ -386,6 +396,12 @@ export function POS() {
             <span>Subtotal:</span>
             <span>${subtotal.toFixed(2)} ₫</span>
           </div>
+          ${discountAmount > 0 ? `
+          <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: #16a34a; font-weight: bold;">
+            <span>Discount (${selectedCustomer?.tier}):</span>
+            <span>-${discountAmount.toFixed(2)} ₫</span>
+          </div>
+          ` : ''}
           <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
             <span>VAT (10%):</span>
             <span>${tax.toFixed(2)} ₫</span>
@@ -723,6 +739,12 @@ export function POS() {
             <div className="px-4 pb-4 pt-3 shrink-0" style={{ background: "rgba(255,255,255,0.4)" }}>
               <div className="space-y-1.5 mb-3 p-3 rounded-xl" style={{ background: "rgba(253,242,248,0.5)", border: "1px solid rgba(212,175,55,0.12)" }}>
                 <div className="flex justify-between"><span style={{ color: "#9d6b7a", fontSize: "12px" }}>{t('pos.subtotal')}</span><span style={{ color: "#3d1a2e", fontSize: "12px", fontWeight: 600 }}>{subtotal.toFixed(2)} ₫</span></div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-emerald-600 font-medium">
+                    <span style={{ fontSize: "12px" }}>{language === 'vi' ? `Giảm giá (${selectedCustomer?.tier})` : `Discount (${selectedCustomer?.tier})`}</span>
+                    <span style={{ fontSize: "12px" }}>-{discountAmount.toFixed(2)} ₫</span>
+                  </div>
+                )}
                 <div className="flex justify-between"><span style={{ color: "#9d6b7a", fontSize: "12px" }}>{t('pos.tax')}</span><span style={{ color: "#9d6b7a", fontSize: "12px" }}>{tax.toFixed(2)} ₫</span></div>
                 <div className="flex justify-between pt-1.5 border-t" style={{ borderColor: "rgba(212,175,55,0.2)" }}><span style={{ color: "#3d1a2e", fontSize: "14px", fontWeight: 700 }}>{t('pos.total_payment')}</span><span style={{ color: "#D4AF37", fontSize: "18px", fontWeight: 800 }}>{total.toFixed(2)} ₫</span></div>
               </div>

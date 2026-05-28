@@ -59,25 +59,56 @@ const CalculationModal = ({ emp, onClose, onConfirm }: { emp: any, onClose: () =
   const standardDays = 26;
   const daily = base / standardDays;
   const mainSalary = Math.round(daily * workDays);
+
+  // Tính tiền tăng ca (OT)
+  const otHours = emp.otHours || 0;
+  const hourly = daily / 8;
+  const otSalary = Math.round(otHours * hourly * 1.5);
+  const grossSalary = mainSalary + otSalary;
   
   // Giới hạn lương đóng bảo hiểm 36tr
   const insSalary = Math.min(base, 36000000);
   
-  // NLĐ đóng 10.5%
+  // NLĐ đóng 10.5% bảo hiểm
   const bhxh_nv = Math.round(insSalary * 0.08);
   const bhyt_nv = Math.round(insSalary * 0.015);
   const bhtn_nv = Math.round(insSalary * 0.01);
-  const total_nv = bhxh_nv + bhyt_nv + bhtn_nv;
+  const total_insurance_nv = bhxh_nv + bhyt_nv + bhtn_nv;
   
-  // DN đóng 21.5%
+  // DN đóng 21.5% bảo hiểm
   const bhxh_dn = Math.round(insSalary * 0.17); // 14% hưu trí + 3% ốm đau
   const tnld_dn = Math.round(insSalary * 0.005);
   const bhyt_dn = Math.round(insSalary * 0.03);
   const bhtn_dn = Math.round(insSalary * 0.01);
   const total_dn = bhxh_dn + tnld_dn + bhyt_dn + bhtn_dn;
 
-  const netSalary = Math.max(0, mainSalary - total_nv);
-  const totalCost = mainSalary + total_dn;
+  // Tính thuế TNCN lũy tiến 2026
+  const giamTruBanThan = emp.giamTruBanThan || 15500000;
+  const tienGiamNPT = emp.tienGiamNPT || 0;
+  const taxableIncome = grossSalary - total_insurance_nv - giamTruBanThan - tienGiamNPT;
+
+  let thue_tncn = 0;
+  if (taxableIncome > 0) {
+    if (taxableIncome <= 10000000) {
+      thue_tncn = taxableIncome * 0.05;
+    } else if (taxableIncome <= 30000000) {
+      thue_tncn = 10000000 * 0.05 + (taxableIncome - 10000000) * 0.10;
+    } else if (taxableIncome <= 60000000) {
+      thue_tncn = 10000000 * 0.05 + 20000000 * 0.10 + (taxableIncome - 30000000) * 0.20;
+    } else if (taxableIncome <= 100000000) {
+      thue_tncn = 10000000 * 0.05 + 20000000 * 0.10 + 30000000 * 0.20 + (taxableIncome - 60000000) * 0.30;
+    } else {
+      thue_tncn = 10000000 * 0.05 + 20000000 * 0.10 + 30000000 * 0.20 + 40000000 * 0.30 + (taxableIncome - 100000000) * 0.35;
+    }
+    thue_tncn = Math.round(thue_tncn);
+  }
+
+  // Kết quả cuối cùng hiển thị
+  const isPaid = emp.displayStatus !== 'Chưa tính';
+  const finalTax = isPaid ? (emp.paidTax || 0) : thue_tncn;
+  const finalNet = isPaid ? emp.paidAmount : Math.max(0, grossSalary - total_insurance_nv - thue_tncn);
+  const finalTotalnv = total_insurance_nv + finalTax;
+  const totalCost = grossSalary + total_dn;
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
@@ -109,9 +140,15 @@ const CalculationModal = ({ emp, onClose, onConfirm }: { emp: any, onClose: () =
                   <span className="text-[#6b4153]">BHTN (1%)</span>
                   <span className="font-bold">{bhtn_nv.toLocaleString()}đ</span>
                 </div>
+                {finalTax > 0 && (
+                  <div className="flex justify-between text-[13px] text-amber-700 font-bold bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10">
+                    <span>Thuế TNCN (Lũy tiến)</span>
+                    <span>{finalTax.toLocaleString()}đ</span>
+                  </div>
+                )}
                 <div className="pt-2 border-t border-[#D4AF37]/20 flex justify-between font-black text-[#3d1a2e]">
                   <span>{language === 'vi' ? 'Tổng khấu trừ' : 'Total Deduction'}</span>
-                  <span>{total_nv.toLocaleString()}đ</span>
+                  <span>{finalTotalnv.toLocaleString()}đ</span>
                 </div>
               </div>
             </div>
@@ -148,7 +185,7 @@ const CalculationModal = ({ emp, onClose, onConfirm }: { emp: any, onClose: () =
              <div className="relative z-10 grid grid-cols-2 gap-8 text-left">
                 <div>
                   <p className="text-white/60 text-[11px] font-bold uppercase tracking-widest mb-1">{t('hr.net_salary')}</p>
-                  <p className="text-[24px] font-black">{netSalary.toLocaleString()}đ</p>
+                  <p className="text-[24px] font-black">{finalNet.toLocaleString()}đ</p>
                 </div>
                 <div className="text-right">
                   <p className="text-white/60 text-[11px] font-bold uppercase tracking-widest mb-1">{t('hr.total_cost')}</p>
@@ -175,9 +212,11 @@ const CalculationModal = ({ emp, onClose, onConfirm }: { emp: any, onClose: () =
 
           <div className="mt-6 flex items-center gap-2 p-4 bg-amber-50 rounded-xl border border-amber-100">
             <Info className="text-amber-600 shrink-0" size={18} />
-            <p className="text-[12px] text-amber-800 leading-relaxed italic text-left">
-              {t('hr.insurance_note')}
-            </p>
+            <div className="text-left text-[12px] text-amber-800 leading-relaxed italic">
+              <p>• {language === 'vi' ? 'Giảm trừ gia cảnh bản thân' : 'Personal deduction'}: {giamTruBanThan.toLocaleString()}đ</p>
+              {tienGiamNPT > 0 && <p>• {language === 'vi' ? 'Giảm trừ người phụ thuộc' : 'Dependent deduction'}: {tienGiamNPT.toLocaleString()}đ ({emp.soNguoiPhuThuoc} {language === 'vi' ? 'người' : 'people'})</p>}
+              <p>• {t('hr.insurance_note')}</p>
+            </div>
           </div>
         </div>
       </div>

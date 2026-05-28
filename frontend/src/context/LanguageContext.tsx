@@ -269,6 +269,7 @@ const translations: Record<Language, Record<string, string>> = {
     'log.stock_lbl': 'Tồn',
     'log.transfer_qty': 'Số Lượng Chuyển',
     'log.system_error': 'Lỗi hệ thống',
+    'log.confirm_transfer_btn': 'Xác Nhận Chuyển Kho',
     // Returns
     'ret.title': 'Quản Lý Đổi Trả',
     'ret.create_ticket_pos': 'Tạo Phiếu Trả Hàng (POS)',
@@ -562,6 +563,7 @@ const translations: Record<Language, Record<string, string>> = {
     'log.stock_lbl': 'Stock',
     'log.transfer_qty': 'Transfer Qty',
     'log.system_error': 'System error',
+    'log.confirm_transfer_btn': 'Confirm Transfer',
     // Returns
     'ret.title': 'Returns & Exchanges',
     'ret.create_ticket_pos': 'Create Return Ticket (POS)',

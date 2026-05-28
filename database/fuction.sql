@@ -3,16 +3,28 @@
 -- ============================================================
 
 -- 1. FUNC_TINH_HANG_THE
-CREATE OR REPLACE FUNCTION FUNC_TINH_HANG_THE (p_diem NUMBER)
+CREATE OR REPLACE FUNCTION FUNC_TINH_HANG_THE (p_madoitac NUMBER)
 RETURN NVARCHAR2
 IS
     v_hang NVARCHAR2(50);
+    v_spending NUMBER;
 BEGIN
-    IF p_diem >= 5000 THEN 
+    -- Tính tổng tiền khách hàng đã mua trong vòng 1 năm qua
+    SELECT NVL(SUM(TONGTIEN), 0)
+    INTO v_spending
+    FROM HOA_DON_BAN_HANG
+    WHERE MADOITAC = p_madoitac
+      AND NGAYBAN >= ADD_MONTHS(SYSDATE, -12);
+
+    -- Giữ nguyên cách tính ngưỡng cũ (tương ứng với 1 điểm = 1000 VNĐ)
+    -- Bạc: 1,000,000 VNĐ (tương đương 1,000 điểm)
+    -- Vàng: 3,000,000 VNĐ (tương đương 3,000 điểm)
+    -- Kim Cương: 5,000,000 VNĐ (tương đương 5,000 điểm)
+    IF v_spending >= 5000000 THEN 
         v_hang := 'Kim Cương';
-    ELSIF p_diem >= 3000 THEN 
+    ELSIF v_spending >= 3000000 THEN 
         v_hang := 'Vàng';
-    ELSIF p_diem >= 1000 THEN 
+    ELSIF v_spending >= 1000000 THEN 
         v_hang := 'Bạc';
     ELSE 
         v_hang := 'Thường';

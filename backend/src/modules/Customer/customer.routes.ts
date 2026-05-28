@@ -39,7 +39,7 @@ router.post('/customers', async (req: Request, res: Response): Promise<any> => {
       DECLARE v_id NUMBER;
       BEGIN
         INSERT INTO DOI_TAC (TENDOITAC, SODIENTHOAI, LOAIDOITAC) VALUES (:name, :phone, 'Khách hàng') RETURNING MADOITAC INTO v_id;
-        INSERT INTO KHACH_HANG (MADOITAC, DIEMTICHLUY, NGAYTHAMGIA, LOAIKHACHHANG) VALUES (v_id, 0, SYSDATE, 'Silver');
+        INSERT INTO KHACH_HANG (MADOITAC, DIEMTICHLUY, NGAYTHAMGIA, LOAIKHACHHANG) VALUES (v_id, 0, SYSDATE, 'Thường');
         :out_id := v_id;
       END;`;
     const result = await connection.execute(plsql, { name, phone, out_id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER } }, { autoCommit: true });

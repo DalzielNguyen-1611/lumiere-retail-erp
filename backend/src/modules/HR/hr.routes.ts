@@ -94,8 +94,12 @@ router.post('/staff', async (req: Request, res: Response): Promise<any> => {
       END;
     `;
     
+    const defaultEmail = email && email.trim() !== ''
+      ? email.trim()
+      : `nv.${phone.replace(/\D/g, '')}@lumiere.local`;
+
     const result = await connection.execute(sql, { 
-      name, phone, email: email || '', prefix, hash: hashedPassword,
+      name, phone, email: defaultEmail, prefix, hash: hashedPassword,
       out_user: { dir: oracledb.BIND_OUT, type: oracledb.STRING }
     }, { autoCommit: true });
 
@@ -219,11 +223,15 @@ router.get('/payroll', async (req: Request, res: Response) => {
         N.MANHANVIEN as "id", 
         N.HOTEN as "name", 
         NVL(H.MUCLUONG, 5000000) as "baseSalary",
+        NVL(H.GIAMTRUBANTHAN, 15500000) as "giamTruBanThan",
+        NVL(H.TIENGIAMNPT, 0) as "tienGiamNPT",
+        NVL(H.SONGUOIPHUTHUOC, 0) as "soNguoiPhuThuoc",
         (SELECT COUNT(*) FROM CHAM_CONG C WHERE C.MANHANVIEN = N.MANHANVIEN AND C.NGAY >= TRUNC(SYSDATE, 'MM') AND C.TRANGTHAI IN ('Đi làm', 'Hoàn thành ca', 'Đi trễ')) as "workDays",
         (SELECT SUM(NVL(TANGCA, 0)) FROM CHAM_CONG C WHERE C.MANHANVIEN = N.MANHANVIEN AND C.NGAY >= TRUNC(SYSDATE, 'MM')) as "otHours",
         P.TRANGTHAI as "status",
         P.MAPHIEU as "slipId",
-        P.THUCLINH as "paidAmount"
+        P.THUCLINH as "paidAmount",
+        P.TONGTHUETNCN as "paidTax"
       FROM NHANVIEN N
       LEFT JOIN HO_SO_LUONG H ON N.MANHANVIEN = H.MANHANVIEN
       LEFT JOIN PHIEU_LUONG P ON N.MANHANVIEN = P.MANHANVIEN AND P.THANGNAM = :month
