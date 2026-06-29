@@ -28,10 +28,10 @@ In this project, I acted as the bridge between business requirements and technic
 ## 📂 BA Artifacts & Deliverables
 Below are the key business analysis documents and diagrams created for this system:
 
-*   [🔗 Business Process Models (BPMN)](#) *(Insert link to your BPMN diagrams)*
-*   [🔗 Entity-Relationship Diagram (ERD)](#) *(Insert link to your database schema/ERD)*
-*   [🔗 User Stories & Acceptance Criteria](#) *(Insert link to your backlog/requirements sheet)*
-*   [🔗 UI/UX Wireframes (Figma)](#) *(Insert link to Figma mockups)*
+*   🔗 [Business Process Models (BPMN)](#) *(Insert link to your BPMN diagrams)*
+*   🔗 [Entity-Relationship Diagram (ERD)](#) *(Insert link to your database schema/ERD)*
+*   🔗 [User Stories & Acceptance Criteria](#) *(Insert link to your backlog/requirements sheet)*
+*   🔗 [UI/UX Wireframes (Figma)](#) *(Insert link to Figma mockups)*
 
 ---
 *Note: The source code (`backend`, `frontend`, `database`) is included in this repository to demonstrate the practical technical implementation of the defined business requirements.*
