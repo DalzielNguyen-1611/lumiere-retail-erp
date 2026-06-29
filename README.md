@@ -29,7 +29,7 @@ In this project, I acted as the bridge between business requirements and technic
 Below are the key business analysis documents and diagrams created for this system:
 
 *   🔗 [Business Process Models (BPMN)](#) *(Insert link to your BPMN diagrams)*
-*   🔗 [Entity-Relationship Diagram (ERD)](#) *(Insert link to your database schema/ERD)*
+*   🔗 [Entity-Relationship Diagram (ERD)](https://www.drawdb.app/editor?shareId=62c72d12ef53d4ceea7ea792266d76a7)
 *   🔗 [User Stories & Acceptance Criteria](#) *(Insert link to your backlog/requirements sheet)*
 *   🔗 [UI/UX Wireframes (Figma)](#) *(Insert link to Figma mockups)*
 
