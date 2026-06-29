@@ -10,8 +10,7 @@ Lumière is a comprehensive Retail ERP and Point-of-Sale (POS) system designed t
 *   🔗 [Entity-Relationship Diagram (ERD)](https://www.drawdb.app/editor?shareId=62c72d12ef53d4ceea7ea792266d76a7)
 *   🔗 [User Stories & Acceptance Criteria](#) *(Insert link to your backlog/requirements sheet)*
 *   🔗 [UI/UX Wireframes (Figma)](https://www.figma.com/make/EqduAoFREHtni0QZgQeYtF/Cosmetic-Store-Dashboard-Design?t=F2uYpJKs1YRvWfOq-1&preview-route=%2Flogin)
-
----
+*   ▶️ [Project Walkthrough / Demo Video](#) *(Insert link to your video)*
 
 ## 🎯 Project Scope
 The MVP (Minimum Viable Product) covers 10+ core enterprise modules, including:
