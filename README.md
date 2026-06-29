@@ -1,5 +1,8 @@
 # Lumière Beauty Studio - Retail ERP & POS System
 
+## 📖 Executive Summary
+Lumière is a comprehensive Retail ERP and Point-of-Sale (POS) system designed to digitalize and streamline the operations of a beauty studio. This project focuses on aligning complex business workflows with system logic to ensure seamless data synchronization across multiple departments.
+
 ## 📂 BA Artifacts & Deliverables (Quick Links)
 *For recruiters and hiring managers, here are the direct links to the key business analysis documents created for this system:*
 
@@ -9,9 +12,6 @@
 *   🔗 [UI/UX Wireframes (Figma)](https://www.figma.com/make/EqduAoFREHtni0QZgQeYtF/Cosmetic-Store-Dashboard-Design?t=F2uYpJKs1YRvWfOq-1&preview-route=%2Flogin)
 
 ---
-
-## 📖 Executive Summary
-Lumière is a comprehensive Retail ERP and Point-of-Sale (POS) system designed to digitalize and streamline the operations of a beauty studio. This project focuses on aligning complex business workflows with system logic to ensure seamless data synchronization across multiple departments.
 
 ## 🎯 Project Scope
 The MVP (Minimum Viable Product) covers 10+ core enterprise modules, including:
