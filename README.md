@@ -33,5 +33,12 @@ Below are the key business analysis documents and diagrams created for this syst
 *   🔗 [User Stories & Acceptance Criteria](#) *(Insert link to your backlog/requirements sheet)*
 *   🔗 [UI/UX Wireframes (Figma)](#) *(Insert link to Figma mockups)*
 
+## 🚀 Product Roadmap & Future Enhancements
+While the current MVP successfully digitalizes the core operational flow, the following modules are planned for future phases to fully address the specific business needs and pain points of the beauty retail industry:
+
+*   **Promotions & Loyalty Management:** Implementation of membership tiers, reward points tracking, and dynamic pricing strategies (e.g., vouchers, flash sales) seamlessly integrated with the POS to boost customer retention.
+*   **Services & Booking System:** Extending the studio's capabilities to manage beauty service appointments, resource allocation (rooms, beds), and automated commission calculations for service staff.
+*   **Vendor Relationship Management (VRM):** Enhancing the current Procurement module to include supplier performance KPI evaluation (e.g., on-time delivery), contract management, and price catalog comparisons.
+
 ---
 *Note: The source code (`backend`, `frontend`, `database`) is included in this repository to demonstrate the practical technical implementation of the defined business requirements.*
