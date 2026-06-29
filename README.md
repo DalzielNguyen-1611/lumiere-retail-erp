@@ -1,5 +1,15 @@
 # Lumière Beauty Studio - Retail ERP & POS System
 
+## 📂 BA Artifacts & Deliverables (Quick Links)
+*For recruiters and hiring managers, here are the direct links to the key business analysis documents created for this system:*
+
+*   🔗 [Business Process Models (BPMN)](#) *(Insert link to your BPMN diagrams)*
+*   🔗 [Entity-Relationship Diagram (ERD)](https://www.drawdb.app/editor?shareId=62c72d12ef53d4ceea7ea792266d76a7)
+*   🔗 [User Stories & Acceptance Criteria](#) *(Insert link to your backlog/requirements sheet)*
+*   🔗 [UI/UX Wireframes (Figma)](https://www.figma.com/make/EqduAoFREHtni0QZgQeYtF/Cosmetic-Store-Dashboard-Design?t=F2uYpJKs1YRvWfOq-1&preview-route=%2Flogin)
+
+---
+
 ## 📖 Executive Summary
 Lumière is a comprehensive Retail ERP and Point-of-Sale (POS) system designed to digitalize and streamline the operations of a beauty studio. This project focuses on aligning complex business workflows with system logic to ensure seamless data synchronization across multiple departments.
 
@@ -31,14 +41,6 @@ While the current MVP successfully digitalizes the core operational flow, the fo
 *   **Promotions & Loyalty Management:** Implementation of membership tiers, reward points tracking, and dynamic pricing strategies (e.g., vouchers, flash sales) seamlessly integrated with the POS to boost customer retention.
 *   **Services & Booking System:** Extending the studio's capabilities to manage beauty service appointments, resource allocation (rooms, beds), and automated commission calculations for service staff.
 *   **Vendor Relationship Management (VRM):** Enhancing the current Procurement module to include supplier performance KPI evaluation (e.g., on-time delivery), contract management, and price catalog comparisons.
-
-## 📂 BA Artifacts & Deliverables
-Below are the key business analysis documents and diagrams created for this system:
-
-*   🔗 [Business Process Models (BPMN)](#) *(Insert link to your BPMN diagrams)*
-*   🔗 [Entity-Relationship Diagram (ERD)](https://www.drawdb.app/editor?shareId=62c72d12ef53d4ceea7ea792266d76a7)
-*   🔗 [User Stories & Acceptance Criteria](#) *(Insert link to your backlog/requirements sheet)*
-*   🔗 [UI/UX Wireframes (Figma)](https://www.figma.com/make/EqduAoFREHtni0QZgQeYtF/Cosmetic-Store-Dashboard-Design?t=F2uYpJKs1YRvWfOq-1&preview-route=%2Flogin)
 
 ---
 *Note: The source code (`backend`, `frontend`, `database`) is included in this repository to demonstrate the practical technical implementation of the defined business requirements.*
